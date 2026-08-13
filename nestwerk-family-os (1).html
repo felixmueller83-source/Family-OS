@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F4F1">
+<title>Nestwerk — Family OS</title>
+<style>
+/* ============================================================
+   NESTWERK — Design Tokens
+   Palette: Salbei-Weiss / Tiefgruen / Personenfarben als Kante
+   ============================================================ */
+:root{
+  --bg:#F1F4F1;
+  --bg-2:#E8EDE8;
+  --surface:#FFFFFF;
+  --surface-2:#FAFBFA;
+  --ink:#1E2622;
+  --ink-2:#48544D;
+  --muted:#7C8A82;
+  --line:#DFE6DF;
+  --line-2:#EDF1EC;
+  --brand:#2F5D50;
+  --brand-soft:#E4EEE9;
+  --gold:#C9922F;
+  --gold-soft:#FAF0DC;
+  --ok:#3C7D5E;
+  --warn:#B5762A;
+  --p-henry:#33739B;
+  --p-hannah:#7A57A3;
+  --p-emma:#D98A33;
+  --p-mama:#B04C77;
+  --p-papa:#2F6F62;
+  --r-s:10px; --r-m:16px; --r-l:22px; --r-xl:30px;
+  --sh-1:0 1px 2px rgba(30,38,34,.05), 0 4px 14px rgba(30,38,34,.05);
+  --sh-2:0 2px 6px rgba(30,38,34,.07), 0 14px 34px rgba(30,38,34,.09);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-display:ui-rounded,"SF Pro Rounded","Segoe UI Variable Display","Segoe UI",Inter,system-ui,sans-serif;
+  --nav-h:76px;
+  --pad:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font);
+  font-size:16px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+  overflow-wrap:anywhere;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+h1,h2,h3,h4{margin:0;font-family:var(--font-display);letter-spacing:-.02em;font-weight:650}
+h1{font-size:26px}
+h2{font-size:19px}
+h3{font-size:16px}
+p{margin:0}
+a{color:var(--brand)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
+
+/* ---------- App-Gerüst ---------- */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.main{flex:1;padding:0 var(--pad) calc(var(--nav-h) + 40px);max-width:1400px;width:100%;margin:0 auto}
+
+/* ---------- Topbar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);
+  border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 12px) var(--pad) 12px;
+}
+.topbar-in{display:flex;align-items:center;gap:12px;max-width:1400px;margin:0 auto}
+.wordmark{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:700;letter-spacing:-.03em;font-size:19px}
+.wordmark .dot{width:26px;height:26px;flex:none}
+.topbar .date{text-align:right;line-height:1.15}
+.sync-dot{margin-left:auto;width:9px;height:9px;border-radius:50%;flex:none;background:var(--muted)}
+.sync-dot.s-ok{background:#4C8579}
+.sync-dot.s-busy{background:var(--gold);animation:pulse 1.2s ease-in-out infinite}
+.sync-dot.s-error{background:#C6493F}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.topbar .date b{display:block;font-size:14px;font-family:var(--font-display)}
+.topbar .date span{font-size:11.5px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+
+/* ---------- Navigation ---------- */
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  display:grid;grid-template-columns:repeat(5,1fr);
+  background:color-mix(in srgb,var(--surface) 92%,transparent);
+  backdrop-filter:saturate(1.5) blur(18px);
+  border-top:1px solid var(--line);
+  padding:6px 4px calc(env(safe-area-inset-bottom) + 6px);
+}
+.nav button{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 2px;border-radius:14px;color:var(--muted);
+  font-size:11px;font-weight:600;letter-spacing:.01em;min-height:56px;justify-content:center;
+  transition:color .15s,background .15s;
+}
+.nav button svg{width:23px;height:23px}
+.nav button[aria-current="page"]{color:var(--brand);background:var(--brand-soft)}
+
+/* ---------- Karten ---------- */
+.card{background:var(--surface);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:18px;border:1px solid var(--line-2)}
+.card.tight{padding:14px}
+.card.flat{box-shadow:none;background:var(--surface-2)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.stack.lg{gap:22px}
+.row{display:flex;align-items:center;gap:12px}
+.spacer{flex:1}
+.section-h{display:flex;align-items:baseline;gap:10px;margin:26px 2px 12px}
+.section-h h2{flex:none}
+.section-h .hint{font-size:12.5px;color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.xs{font-size:11.5px}
+.grid{display:grid;gap:14px}
+
+/* ---------- Chips / Badges ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--bg-2);font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.chip.brand{background:var(--brand-soft);color:var(--brand)}
+.chip.gold{background:var(--gold-soft);color:#8A6314}
+.chip.warn{background:#FBEEE0;color:var(--warn)}
+.chip.ok{background:#E3F1E8;color:var(--ok)}
+.pill-person{display:inline-flex;align-items:center;gap:7px;padding:4px 12px 4px 4px;border-radius:999px;background:var(--bg-2);font-size:13px;font-weight:650}
+.pill-person svg{width:26px;height:26px;border-radius:999px;flex:none}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:14px;background:var(--brand);color:#fff;font-weight:650;font-size:14.5px;min-height:46px;transition:transform .12s,filter .15s;border:1px solid transparent}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.soft{background:var(--brand-soft);color:var(--brand)}
+.btn.gold{background:var(--gold);color:#fff}
+.btn.danger{background:#FBEDEE;color:#A33A46;border-color:#F3D8DB}
+.btn.sm{padding:8px 13px;min-height:38px;font-size:13.5px;border-radius:11px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.42;pointer-events:none}
+.btn svg{width:17px;height:17px}
+
+/* ---------- Aufgaben-Zeile mit Checkbox ---------- */
+.task{display:flex;align-items:center;gap:13px;padding:11px 4px;border-bottom:1px solid var(--line-2);min-height:56px}
+.task:last-child{border-bottom:0}
+.check{
+  width:30px;height:30px;flex:none;border-radius:10px;border:2px solid var(--line);
+  background:var(--surface);display:grid;place-items:center;transition:all .18s cubic-bezier(.2,.9,.3,1.4);
+}
+.check svg{width:17px;height:17px;stroke:#fff;stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:26;stroke-dashoffset:26;transition:stroke-dashoffset .25s ease .05s}
+.task.done .check{background:var(--ok);border-color:var(--ok)}
+.task.done .check svg{stroke-dashoffset:0}
+.task.done .t-title{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:var(--line)}
+.task .t-body{flex:1;min-width:0}
+.t-title{font-size:15px;font-weight:600;line-height:1.3}
+.t-sub{font-size:12.5px;color:var(--muted);margin-top:1px}
+.t-ico{width:34px;height:34px;flex:none}
+.task.pop .check{animation:pop .4s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.28)}100%{transform:scale(1)}}
+
+/* ---------- Fortschritt ---------- */
+.bar{height:10px;border-radius:999px;background:var(--bg-2);overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:999px;background:var(--brand);transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.bar.thick{height:16px}
+.bar.gold > i{background:var(--gold)}
+
+/* ---------- Personen-Akzent ---------- */
+.accent{border-left:5px solid var(--acc,var(--brand))}
+.hero-person{position:relative;overflow:hidden;padding:20px;border-radius:var(--r-xl);background:linear-gradient(160deg,var(--acc-soft,#EEF3F0),var(--surface) 62%);border:1px solid var(--line-2)}
+.hero-person .figs{display:flex;align-items:flex-end;gap:6px}
+.hero-person .avatar{width:88px;height:88px;flex:none}
+.hero-person .comp{width:56px;height:56px;flex:none;animation:bob 4.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ---------- Tagesband (Signature) ---------- */
+.band{background:var(--surface);border-radius:var(--r-l);border:1px solid var(--line-2);box-shadow:var(--sh-1);overflow:hidden}
+.band-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.band-inner{min-width:760px;position:relative}
+.band-hours{display:flex;padding-left:96px;border-bottom:1px solid var(--line-2);position:sticky;top:0;background:var(--surface);z-index:2}
+.band-hours span{flex:1;font-size:10.5px;color:var(--muted);font-weight:650;padding:7px 0 6px 5px;border-left:1px solid var(--line-2)}
+.lane{display:flex;align-items:stretch;border-bottom:1px solid var(--line-2);min-height:62px}
+.lane:last-child{border-bottom:0}
+.lane-head{width:96px;flex:none;display:flex;align-items:center;gap:7px;padding:8px 8px 8px 12px;background:var(--surface-2);border-right:1px solid var(--line-2);position:sticky;left:0;z-index:1}
+.lane-head svg{width:30px;height:30px;flex:none}
+.lane-head b{font-size:12.5px;font-weight:650}
+.lane-track{flex:1;position:relative;padding:9px 0}
+.lane-grid{position:absolute;inset:0;display:flex;pointer-events:none}
+.lane-grid i{flex:1;border-left:1px solid var(--line-2)}
+.ev{
+  position:absolute;top:9px;height:44px;border-radius:11px;padding:6px 9px;
+  background:var(--ev-bg,#EEF2F0);border-left:3px solid var(--ev-c,var(--brand));
+  overflow:hidden;box-shadow:0 1px 2px rgba(30,38,34,.05)
+}
+.ev b{display:block;font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+.ev span{display:block;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.ev.travel{background:repeating-linear-gradient(135deg,#F3F5F3,#F3F5F3 5px,#E9EDE9 5px,#E9EDE9 10px);border-left-style:dashed;height:22px;top:20px}
+.ev.travel b{font-size:10px;color:var(--ink-2)}
+.now-line{position:absolute;top:0;bottom:0;width:2px;background:#C6493F;z-index:3;pointer-events:none}
+.now-line::before{content:"";position:absolute;top:-1px;left:-4px;width:10px;height:10px;border-radius:50%;background:#C6493F}
+
+/* ---------- Emma-Modus ---------- */
+.emma-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.emma-card{
+  position:relative;border-radius:26px;background:var(--surface);border:2px solid var(--line-2);
+  box-shadow:var(--sh-1);padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  min-height:168px;justify-content:center;transition:transform .16s,border-color .2s,background .2s;
+}
+.emma-card svg.illu{width:100%;max-width:132px;height:auto;aspect-ratio:1;pointer-events:none}
+.emma-card .lbl{font-family:var(--font-display);font-size:16px;font-weight:700}
+.emma-card:active{transform:scale(.96)}
+.emma-card.done{background:#EAF4EE;border-color:#9FCBB2}
+.emma-card .tick{position:absolute;top:9px;right:9px;width:34px;height:34px;border-radius:50%;background:var(--ok);display:grid;place-items:center;transform:scale(0);transition:transform .3s cubic-bezier(.2,.9,.3,1.6)}
+.emma-card.done .tick{transform:scale(1)}
+.emma-card .tick svg{width:19px;height:19px;stroke:#fff;stroke-width:3.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.emma-card.done svg.illu{filter:saturate(.85)}
+
+/* ---------- Medienzeit ---------- */
+.media-visual{display:flex;align-items:center;gap:16px}
+.media-visual .device{width:78px;height:78px;flex:none}
+.media-visual .mv-body{flex:1;min-width:0}
+.locked-note{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:var(--r-m);background:#FBF3E6;border:1px solid #F0E0C4}
+.unlock-burst{animation:burst .8s ease-out}
+@keyframes burst{0%{transform:scale(.9);filter:brightness(1)}35%{transform:scale(1.04);filter:brightness(1.15)}100%{transform:scale(1);filter:brightness(1)}}
+
+/* ---------- Coins ---------- */
+.coin-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 14px 6px 6px;border-radius:999px;background:var(--gold-soft);color:#7E5A11;font-weight:750;font-family:var(--font-display)}
+.coin-badge svg{width:24px;height:24px}
+.coin-fly{position:fixed;z-index:200;pointer-events:none;animation:fly 1s cubic-bezier(.3,.8,.4,1) forwards}
+@keyframes fly{0%{transform:translate(0,0) scale(.6);opacity:0}25%{opacity:1;transform:translate(0,-38px) scale(1.15)}100%{transform:translate(0,-92px) scale(.8);opacity:0}}
+
+/* ---------- Missionen ---------- */
+.mission{display:flex;gap:13px;align-items:flex-start;padding:15px;border-radius:var(--r-m);border:1px solid var(--line);background:var(--surface)}
+.mission .m-ico{width:44px;height:44px;flex:none}
+.mission .m-body{flex:1;min-width:0}
+.mission.claimed{background:var(--surface-2);border-style:dashed}
+
+/* ---------- Toast ---------- */
+.toast-wrap{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + 14px);z-index:120;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
+.toast{background:var(--ink);color:#fff;padding:11px 17px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:var(--sh-2);animation:toastIn .28s cubic-bezier(.2,.9,.3,1.3);max-width:440px}
+.toast.gold{background:var(--gold)}
+@keyframes toastIn{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ---------- Personenwechsler ---------- */
+.who{display:flex;gap:9px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+.who::-webkit-scrollbar{display:none}
+.who button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px 8px;border-radius:18px;background:var(--surface);border:1.5px solid var(--line-2);min-width:78px;transition:all .18s}
+.who button svg{width:46px;height:46px}
+.who button b{font-size:12.5px;font-weight:650;color:var(--ink-2)}
+.who button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);box-shadow:var(--sh-1)}
+.who button[aria-pressed="true"] b{color:var(--ink)}
+
+/* ---------- Formulare (Admin) ---------- */
+label.f{display:block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+input.f,select.f,textarea.f{width:100%;padding:11px 13px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-size:15px;min-height:46px}
+input.f:focus,select.f:focus,textarea.f:focus{border-color:var(--brand);outline:none}
+.form-row{display:grid;gap:12px;grid-template-columns:1fr}
+.adm-item{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:11px 0;border-bottom:1px solid var(--line-2)}
+.adm-item .ai-body{flex:1 1 200px}
+.adm-item:last-child{border-bottom:0}
+.adm-item .ai-body{flex:1;min-width:0}
+.icon-btn{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--bg-2);flex:none}
+.icon-btn svg{width:18px;height:18px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{padding:9px 15px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13.5px;font-weight:650;color:var(--ink-2);white-space:nowrap}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ---------- Modal ---------- */
+.modal-bg{position:fixed;inset:0;background:rgba(20,28,24,.45);z-index:150;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom) + 22px);max-height:88dvh;overflow-y:auto;animation:up .3s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes up{from{transform:translateY(28px)}to{transform:translateY(0)}}
+.modal h2{margin-bottom:14px}
+
+/* ---------- Haus / Intervalle ---------- */
+.chore-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:13px 0;border-bottom:1px solid var(--line-2)}
+.chore-row > div{flex:1 1 190px}
+.chore-row:last-child{border-bottom:0}
+.due-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.due-over{background:#C6493F}.due-today{background:var(--warn)}.due-soon{background:var(--gold)}.due-ok{background:#B9C7BE}
+
+/* ---------- Reward ---------- */
+.reward{display:flex;gap:12px;align-items:center;padding:13px;border-radius:var(--r-m);border:1px solid var(--line);background:var(--surface)}
+.reward .r-ico{width:42px;height:42px;flex:none}
+
+/* ---------- Empty ---------- */
+.empty{text-align:center;padding:26px 16px;color:var(--muted);font-size:14px}
+.empty svg{width:64px;height:64px;opacity:.65;margin-bottom:8px}
+
+/* ============================================================
+   RESPONSIVE — eigene Layouts, kein Zusammenschieben
+   ============================================================ */
+@media (min-width:700px){
+  :root{--pad:26px}
+  .emma-grid{grid-template-columns:repeat(3,1fr)}
+  .emma-card{min-height:200px}
+  .emma-card svg.illu{max-width:150px}
+  .form-row{grid-template-columns:1fr 1fr}
+  h1{font-size:31px}
+}
+/* Tablet: Familien-Dashboard an der Wand */
+@media (min-width:900px){
+  .nav{
+    top:0;bottom:0;left:0;right:auto;width:104px;grid-template-columns:1fr;
+    grid-auto-rows:min-content;align-content:start;gap:6px;
+    border-top:0;border-right:1px solid var(--line);padding-top:calc(env(safe-area-inset-top) + 96px)
+  }
+  .nav button{min-height:66px;font-size:11.5px}
+  .nav button svg{width:25px;height:25px}
+  .app{padding-left:104px}
+  .topbar{padding-left:calc(104px + var(--pad));margin-left:-104px}
+  .main{padding-bottom:44px}
+  .two-col{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;align-items:start}
+  .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+  .modal-bg{align-items:center}
+  .modal{border-radius:26px;max-height:82dvh}
+  .toast-wrap{bottom:24px;left:104px}
+}
+@media (min-width:1200px){
+  .emma-grid{grid-template-columns:repeat(4,1fr)}
+  .four-col{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start}
+}
+.hide-mob{display:none}
+@media (min-width:900px){.hide-mob{display:block}.only-mob{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="wordmark"><span class="dot" id="mark"></span> Nestwerk</div>
+      <span class="sync-dot" id="syncDot" style="display:none" aria-hidden="true"></span>
+      <div class="date"><b id="dateB"></b><span id="dateS"></span></div>
+    </div>
+  </header>
+  <main class="main" id="view"></main>
+</div>
+<nav class="nav" id="nav"></nav>
+<div class="toast-wrap" id="toasts"></div>
+<div id="modalRoot"></div>
+<script>
+"use strict";
+/* ============================================================================
+   NESTWERK — Family OS
+   Schichten:  Store (Daten) → Engine (reine Logik) → Actions → UI
+   Kein Framework, keine externen Abhängigkeiten, offline lauffähig.
+   ========================================================================== */
+
+/* ==========================================================================
+   0) Hilfsfunktionen — Datum & Zeit
+   ========================================================================== */
+const T = {
+  key(d){ const x=d||new Date(); return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"); },
+  parse(k){ const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); },
+  addDays(k,n){ const d=T.parse(k); d.setDate(d.getDate()+n); return T.key(d); },
+  diffDays(a,b){ return Math.round((T.parse(a)-T.parse(b))/86400000); },
+  dow(k){ const n=T.parse(k).getDay(); return n===0?7:n; },            // Mo=1 … So=7
+  min(hhmm){ const [h,m]=hhmm.split(":").map(Number); return h*60+m; },
+  hhmm(mins){ mins=Math.max(0,Math.round(mins)); return String(Math.floor(mins/60)).padStart(2,"0")+":"+String(mins%60).padStart(2,"0"); },
+  dayName(k){ return ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"][T.dow(k)-1]; },
+  dayShort(k){ return ["Mo","Di","Mi","Do","Fr","Sa","So"][T.dow(k)-1]; },
+  long(k){ const d=T.parse(k); return d.getDate()+". "+["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][d.getMonth()]; },
+  nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+};
+const uid = p => (p||"id")+"_"+Math.random().toString(36).slice(2,9);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ==========================================================================
+   1) SEED — alle Familiendaten als Daten, nicht als Code.
+      Alles hier ist im Admin-Bereich änderbar.
+   ========================================================================== */
+function defaultDB(){
+  const today = T.key(new Date());
+  const back = n => T.addDays(today,-n);
+  return {
+  meta:{ version:1, created:today, abAnchor:"2026-01-05", abAnchorWeek:"A" },
+
+  settings:{
+    hannahHasKey:false,
+    hannahCareEarliest:"13:45",
+    hannahCareLatest:"15:00",
+    emmaPickupTarget:"14:30",
+    emmaPickupLatest:"15:00",
+    emmaKitaTravel:10,
+    emmaBedStart:"19:15",
+    kitchenStart:"19:45",
+    shopping:{ day:1, start:"15:15", minutes:60 },  // Montag, weil nachmittags nichts ansteht
+    weekResetDay:4                                   // Donnerstag: Vorbereitung auf Freitag
+  },
+
+  people:[
+    {id:"henry", name:"Henry", role:"child", age:11, colorVar:"--p-henry", soft:"#E7F0F6", media:60, companion:"flint",  device:"Nintendo Switch", mode:"kid"},
+    {id:"hannah",name:"Hannah",role:"child", age:8,  colorVar:"--p-hannah",soft:"#EFEAF7", media:45, companion:"luma",   device:"Tablet / TV",     mode:"kid"},
+    {id:"emma",  name:"Emma",  role:"child", age:3,  colorVar:"--p-emma",  soft:"#FAEEDE", media:45, companion:"piko",   device:"Tablet / TV",     mode:"emma"},
+    {id:"mama",  name:"Mama",  role:"adult", age:38, colorVar:"--p-mama",  soft:"#F7E9EF", media:0,  companion:"sora",   device:"", mode:"adult"},
+    {id:"papa",  name:"Papa",  role:"adult", age:40, colorVar:"--p-papa",  soft:"#E4EFEB", media:0,  companion:"bramble",device:"", mode:"adult"}
+  ],
+
+  /* ---- Henrys Stundenplan: 4 Blöcke pro Tag, A/B-Woche ---- */
+  schoolBlocks:[
+    {id:"b12", label:"1./2.", start:"07:45", end:"09:15"},
+    {id:"b34", label:"3./4.", start:"09:35", end:"11:05"},
+    {id:"b56", label:"5./6.", start:"11:25", end:"12:55"},
+    {id:"b78", label:"7./8.", start:"13:40", end:"15:10"}
+  ],
+  henryTimetable:{
+    A:{ 1:["Deutsch","GL","Mathe",null], 2:["Englisch","Mathe","Kunst",null],
+        3:["Deutsch","Sport","Musik",null], 4:[null,"Ethik","Englisch",null],
+        5:["NaWi","Deutsch","Englisch",null] },
+    B:{ 1:["Deutsch","GL","Mathe",null], 2:["Englisch","Mathe","Kunst",null],
+        3:["GL","Sport","KL",null],       4:[null,"Ethik","Deutsch",null],
+        5:["NaWi","Musik","Englisch","NaWi"] }
+  },
+
+  /* ---- Feste Termine & Regeln (wiederkehrend) ---- */
+  events:[
+    /* Schule / Betreuung */
+    {id:"e_han_school", person:"hannah", title:"Schule", kind:"school", days:[1,2,3,4,5], week:"*", start:"07:50", end:"12:25"},
+    {id:"e_han_care",   person:"hannah", title:"Betreuung", kind:"care", days:[1,2,3,4,5], week:"*", start:"12:25", end:"15:00"},
+    {id:"e_emma_kita",  person:"emma",   title:"Kita", kind:"school", days:[1,2,3,4,5], week:"*", start:"08:00", end:"14:30"},
+    /* Hobbys Kinder */
+    {id:"e_hen_rugby_mi", person:"henry", title:"Rugby", kind:"hobby", days:[3], week:"*", start:"16:30", end:"18:00", travel:{mode:"car",min:18}, prep:"Rugbysachen"},
+    {id:"e_hen_capo",     person:"henry", title:"Capoeira", kind:"hobby", days:[4], week:"*", start:"17:00", end:"18:00", travel:{mode:"bike",min:15}, prep:"Capoeira-Sachen"},
+    {id:"e_hen_rugby_fr", person:"henry", title:"Rugby", kind:"hobby", days:[5], week:"*", start:"16:30", end:"18:00", travel:{mode:"car",min:18}, prep:"Rugbysachen"},
+    {id:"e_han_dance",    person:"hannah",title:"Tanzen", kind:"hobby", days:[2], week:"*", start:"16:00", end:"17:00", travel:{mode:"scooter",min:12}, prep:"Tanzsachen"},
+    {id:"e_han_rugby_mi", person:"hannah",title:"Rugby", kind:"hobby", days:[3], week:"*", start:"16:30", end:"18:00", travel:{mode:"car",min:18}, prep:"Rugbysachen"},
+    {id:"e_han_ride",     person:"hannah",title:"Reiten", kind:"hobby", days:[4], week:"*", start:"15:00", end:"16:00", travel:{mode:"bike",min:15}, prep:"Reitsachen"},
+    {id:"e_han_rugby_fr", person:"hannah",title:"Rugby", kind:"hobby", days:[5], week:"*", start:"16:30", end:"18:00", travel:{mode:"car",min:18}, prep:"Rugbysachen"},
+    {id:"e_emma_turnen",  person:"emma",  title:"Turnen", kind:"hobby", days:[4], week:"*", start:"15:30", end:"17:00", travel:{mode:"car",min:10}, prep:"Turnbeutel"},
+    /* Eltern */
+    {id:"e_mama_sport", person:"mama", title:"Sport", kind:"sport", days:[2], week:"*", start:"19:00", end:"20:15", blocksEvening:true},
+    {id:"e_papa_sport", person:"papa", title:"Sport", kind:"sport", days:[5], week:"*", start:"19:00", end:"20:15", blocksEvening:true},
+    {id:"e_mama_coach", person:"mama", title:"U8-Rugby: Training leiten", kind:"family", days:[5], week:"*", start:"16:15", end:"18:15"},
+    {id:"e_papa_coach", person:"papa", title:"U8-Rugby: Training leiten", kind:"family", days:[5], week:"*", start:"16:15", end:"18:15"}
+  ],
+
+  /* ---- Arbeitsplan (Mama 4×6h, Fr frei · Mi Pflicht-Bürotag) ---- */
+  work:{
+    mama:{ 1:{mode:"home"}, 2:{mode:"home"}, 3:{mode:"office"}, 4:{mode:"office"}, 5:{mode:"off"},
+           homeStart:"09:00", homeEnd:"14:30", officeStart:"09:00", officeEnd:"14:00",
+           earlyStart:"06:00", targetDaily:360, commute:20, fridayMin:180 },
+    papa:{ 1:{mode:"office"}, 2:{mode:"office"}, 3:{mode:"office"}, 4:{mode:"office"}, 5:{mode:"home"},
+           homeStart:"08:00", homeEnd:"16:00", officeStart:"08:00", officeEnd:"16:30",
+           earlyStart:"06:00", targetDaily:480, commute:40, fridayMin:0 }
+  },
+
+  /* ---- Daily Basics ---- */
+  basics:[
+    {id:"db1", person:"henry", title:"Brotdose ausräumen", icon:"lunchbox", days:[1,2,3,4,5], unlocksMedia:true},
+    {id:"db2", person:"henry", title:"Schulzettel & Ordner erledigen", icon:"folder", days:[1,2,3,4,5], unlocksMedia:true},
+    {id:"db3", person:"henry", title:"Schultasche für morgen packen", icon:"backpack", days:[1,2,3,4,7]},
+    {id:"db4", person:"henry", title:"Zimmer 5 Minuten aufräumen", icon:"room", days:[1,2,3,4,5,6,7], unlocksMedia:true},
+    {id:"db5", person:"henry", title:"Schmutzwäsche in den Korb", icon:"laundry", days:[1,2,3,4,5,6,7]},
+    {id:"db6", person:"henry", title:"Eigene Wäsche wegräumen", icon:"fold", days:[2,5]},
+    {id:"db7", person:"henry", title:"Sportzeug für morgen rauslegen", icon:"sportbag", days:[2,3,4]},
+    {id:"db8", person:"henry", title:"Handtuch aufhängen, Bad ordentlich lassen", icon:"towel", days:[1,2,3,4,5,6,7]},
+
+    {id:"db10", person:"hannah", title:"Brotdose ausräumen", icon:"lunchbox", days:[1,2,3,4,5], unlocksMedia:true},
+    {id:"db11", person:"hannah", title:"Schulsachen & Zettel erledigen", icon:"folder", days:[1,2,3,4,5], unlocksMedia:true},
+    {id:"db12", person:"hannah", title:"Ranzen für morgen packen", icon:"backpack", days:[1,2,3,4,7]},
+    {id:"db13", person:"hannah", title:"Zimmer 5 Minuten aufräumen", icon:"room", days:[1,2,3,4,5,6,7], unlocksMedia:true},
+    {id:"db14", person:"hannah", title:"Schmutzwäsche in den Korb", icon:"laundry", days:[1,2,3,4,5,6,7]},
+    {id:"db15", person:"hannah", title:"Eigene Wäsche wegräumen", icon:"fold", days:[2,5]},
+    {id:"db16", person:"hannah", title:"Tanzsachen einpacken — morgens!", icon:"sportbag", days:[2], morning:true},
+    {id:"db17", person:"hannah", title:"Reitsachen einpacken — morgens!", icon:"sportbag", days:[4], morning:true},
+    {id:"db18", person:"hannah", title:"Handtuch aufhängen, Bad ordentlich lassen", icon:"towel", days:[1,2,3,4,5,6,7]},
+
+    {id:"db20", person:"emma", title:"Spielzeug in die Kiste", short:"Spielzeug", icon:"toybox", days:[1,2,3,4,5,6,7], unlocksMedia:true},
+    {id:"db21", person:"emma", title:"Zähne putzen", short:"Zähne", icon:"tooth", days:[1,2,3,4,5,6,7]},
+    {id:"db22", person:"emma", title:"Wäsche in den Korb", short:"Wäsche", icon:"laundry", days:[1,2,3,4,5,6,7], unlocksMedia:true},
+    {id:"db23", person:"emma", title:"Schuhe an den Platz", short:"Schuhe", icon:"shoes", days:[1,2,3,4,5,6,7]},
+    {id:"db24", person:"emma", title:"Teller zur Spüle bringen", short:"Teller", icon:"plate", days:[1,2,3,4,5,6,7]},
+    {id:"db25", person:"emma", title:"Hände waschen", short:"Hände", icon:"soap", days:[1,2,3,4,5,6,7]}
+  ],
+
+  /* ---- Haushaltsgedächtnis: wiederkehrende Aufgaben ---- */
+  chores:[
+    {id:"c_dish",   title:"Spülmaschine aus- und einräumen", room:"Küche", interval:1, effort:1, minAge:7, pool:["henry","hannah","mama","papa"], rotate:true, lastDone:back(1)},
+    {id:"c_trash",  title:"Müll rausbringen", room:"Haus", interval:3, effort:1, minAge:8, pool:["henry","hannah","papa","mama"], lastDone:back(3)},
+    {id:"c_drain",  title:"Duschabfluss reinigen", room:"Bad", interval:14, effort:2, minAge:11, pool:["mama","papa","henry"], lastDone:back(15)},
+    {id:"c_bath",   title:"Badezimmer reinigen", room:"Bad", interval:7, effort:3, minAge:14, pool:["mama","papa"], lastDone:back(7)},
+    {id:"c_vac",    title:"Staubsaugen Erdgeschoss", room:"Haus", interval:4, effort:2, minAge:9, pool:["henry","mama","papa"], lastDone:back(4)},
+    {id:"c_mop",    title:"Boden wischen", room:"Haus", interval:10, effort:3, minAge:12, pool:["mama","papa"], lastDone:back(9)},
+    {id:"c_towels", title:"Handtücher wechseln", room:"Bad", interval:7, effort:1, minAge:8, pool:["hannah","henry","mama","papa"], lastDone:back(6)},
+    {id:"c_beds",   title:"Bettwäsche wechseln", room:"Schlafzimmer", interval:21, effort:3, minAge:10, pool:["mama","papa","henry"], lastDone:back(20)},
+    {id:"c_fridge", title:"Kühlschrank auswischen & prüfen", room:"Küche", interval:21, effort:2, minAge:11, pool:["mama","papa","henry"], lastDone:back(18)},
+    {id:"c_counter",title:"Arbeitsflächen & Herd gründlich", room:"Küche", interval:7, effort:2, minAge:12, pool:["mama","papa"], lastDone:back(5)},
+    {id:"c_plants", title:"Pflanzen gießen", room:"Haus", interval:4, effort:1, minAge:5, pool:["hannah","henry","emma","mama","papa"], lastDone:back(4)},
+    {id:"c_wash",   title:"Wäsche: Waschgang starten", room:"Wäsche", interval:2, effort:1, minAge:12, pool:["mama","papa"], lastDone:back(2)},
+    {id:"c_hang",   title:"Wäsche aufhängen / in den Trockner", room:"Wäsche", interval:2, effort:1, minAge:10, pool:["mama","papa","henry"], lastDone:back(2)},
+    {id:"c_fold",   title:"Wäsche zusammenlegen", room:"Wäsche", interval:3, effort:2, minAge:8, pool:["henry","hannah","mama","papa"], lastDone:back(3)},
+    {id:"c_shoes",  title:"Schuhschrank sortieren", room:"Flur", interval:30, effort:1, minAge:6, pool:["hannah","henry","mama","papa"], lastDone:back(26)},
+    {id:"c_pantry", title:"Vorratsschrank prüfen", room:"Küche", interval:21, effort:2, minAge:12, pool:["mama","papa"], lastDone:back(14)},
+    {id:"c_reset",  title:"Freitags-Reset: 10 Minuten gemeinsam aufräumen", room:"Familie", interval:7, effort:1, minAge:3, pool:["henry","hannah","emma","mama","papa"], everyone:true, fixedDay:4, lastDone:back(7)},
+    {id:"c_shop",   title:"Wocheneinkauf", room:"Familie", interval:7, effort:3, minAge:16, pool:["mama","papa"], fixedDay:1, lastDone:back(7)},
+    {id:"c_coach",  title:"U8-Rugby-Training vorbereiten", room:"Familie", interval:7, effort:2, minAge:16, pool:["mama","papa"], fixedDay:3, lastDone:back(7), note:"Rechtzeitig vor Freitag – nicht erst kurz vorher."},
+    {id:"c_window", title:"Fenster putzen (saisonal)", room:"Haus", interval:90, effort:3, minAge:14, pool:["mama","papa"], lastDone:back(74)}
+  ],
+
+  /* ---- Jobbörse ---- */
+  missions:[
+    {id:"m1", title:"Wäsche zusammenlegen", desc:"Einen Korb komplett falten und stapeln.", icon:"fold", coins:12, minAge:7, status:"open", by:null, dueIn:2},
+    {id:"m2", title:"Schublade aufräumen", desc:"Eine Schublade deiner Wahl komplett sortieren.", icon:"drawer", coins:8, minAge:6, status:"open", by:null, dueIn:5},
+    {id:"m3", title:"Schuhe im Flur sortieren", desc:"Alle Schuhe paarweise ins Regal.", icon:"shoes", coins:5, minAge:3, status:"open", by:null, dueIn:1},
+    {id:"m4", title:"Fensterbank im Wohnzimmer wischen", desc:"Abräumen, wischen, zurückstellen.", icon:"sparkle", coins:10, minAge:8, status:"open", by:null, dueIn:4},
+    {id:"m5", title:"Laub im Garten zusammenrechen", desc:"Eine Ecke des Gartens freiräumen.", icon:"leaf", coins:15, minAge:9, status:"open", by:null, dueIn:6},
+    {id:"m6", title:"Kühlschrank mit ausräumen", desc:"Ein Fach leeren, auswischen, einräumen.", icon:"fridge", coins:12, minAge:8, status:"open", by:null, dueIn:3},
+    {id:"m7", title:"Spielzeugkiste sortieren", desc:"Alles, was reingehört, einsortieren.", icon:"toybox", coins:6, minAge:3, status:"open", by:null, dueIn:3},
+    {id:"m8", title:"Auto innen aussaugen", desc:"Fußmatten raus, saugen, Matten rein.", icon:"car", coins:18, minAge:10, status:"open", by:null, dueIn:7}
+  ],
+
+  /* ---- Reward Shop (keine Süßigkeiten) ---- */
+  rewards:[
+    {id:"r1", title:"Filmabend aussuchen", desc:"Du bestimmst den Film am Familienabend.", icon:"movie", cost:30, minAge:3},
+    {id:"r2", title:"Abendessen bestimmen", desc:"Du wählst, was gekocht wird.", icon:"plate", cost:25, minAge:3},
+    {id:"r3", title:"30 Minuten extra Medienzeit", desc:"Einmalig, an einem Tag deiner Wahl.", icon:"tablet", cost:40, minAge:6},
+    {id:"r4", title:"Eine Stunde länger aufbleiben", desc:"An einem Freitag oder Samstag.", icon:"moon", cost:45, minAge:6},
+    {id:"r5", title:"Freundin oder Freund einladen", desc:"Nachmittagsbesuch nach Absprache.", icon:"friends", cost:50, minAge:5},
+    {id:"r6", title:"Taschengeld: 3 €", desc:"Wird direkt ausgezahlt.", icon:"coin", cost:60, minAge:7},
+    {id:"r7", title:"Ausflug mitbestimmen", desc:"Du wählst das Ziel am Wochenende.", icon:"map", cost:70, minAge:5},
+    {id:"r8", title:"Einmal Chore-Frei", desc:"Eine Haushaltsaufgabe wird dir abgenommen.", icon:"sparkle", cost:35, minAge:6},
+    {id:"r9", title:"Zeit allein mit Mama oder Papa", desc:"Eine Stunde, nur ihr zwei.", icon:"heart", cost:55, minAge:3}
+  ],
+
+  teamGoal:{ title:"Gemeinsamer Pizza- und Filmabend", target:120, progress:0, icon:"movie" },
+
+  /* ---- veränderlicher Zustand ---- */
+  state:{
+    coins:{ henry:0, hannah:0, emma:0 },
+    log:{},              // "YYYY-MM-DD" → { basics:{}, chores:{}, missions:{}, media:{}, assign:{}, eveningSwap:false }
+    redemptions:[],
+    choreHistory:{ henry:0, hannah:0, emma:0, mama:0, papa:0 }
+  }
+  };
+}
+
+/* ==========================================================================
+   2) OPS — jede Änderung ist eine kleine, beschreibbare Aktion.
+      Nur so lassen sich Änderungen von fünf Geräten sauber zusammenführen:
+      es wird nicht der ganze Datenstand überschrieben, sondern nur die Aktion
+      übertragen und auf jedem Gerät erneut angewendet.
+   ========================================================================== */
+const Ops = (function(){
+  function dayOf(db, k){
+    if(!db.state.log[k]) db.state.log[k] = { basics:{}, chores:{}, missions:{}, media:{}, assign:{}, eveningSwap:false };
+    const d = db.state.log[k];
+    ["basics","chores","missions","media","assign"].forEach(x=>{ if(!d[x]) d[x]={}; });
+    return d;
+  }
+  const H = {
+    "basic.set"(db,op){ dayOf(db,op.date).basics[op.id] = op.value; },
+
+    "chore.set"(db,op){
+      const day = dayOf(db,op.date);
+      day.chores[op.id] = op.value;
+      const c = db.chores.find(x=>x.id===op.id); if(!c) return;
+      const who = op.who || day.assign[op.id];
+      if(op.value){
+        c.lastDone = op.date;
+        if(who && who!=="*" && db.state.choreHistory[who]!=null) db.state.choreHistory[who] += (c.effort||1);
+      }else{
+        c.lastDone = T.addDays(op.date, -(c.interval||1));
+        if(who && who!=="*" && db.state.choreHistory[who]!=null) db.state.choreHistory[who] = Math.max(0, db.state.choreHistory[who]-(c.effort||1));
+      }
+    },
+    "assign.set"(db,op){ const d = dayOf(db,op.date); d.assign = Object.assign({}, op.map, d.assign||{}); },
+
+    "mission.claim"(db,op){ const m = db.missions.find(x=>x.id===op.id); if(m && m.status==="open"){ m.status="claimed"; m.by=op.by; m.claimedAt=op.date; } },
+    "mission.return"(db,op){ const m = db.missions.find(x=>x.id===op.id); if(m && m.status==="claimed"){ m.status="open"; m.by=null; } },
+    "mission.done"(db,op){
+      const m = db.missions.find(x=>x.id===op.id); if(!m || m.status!=="claimed") return;
+      m.status="done"; m.doneAt=op.date;
+      if(db.state.coins[m.by]!=null) db.state.coins[m.by] += m.coins;
+      db.teamGoal.progress = Math.min(db.teamGoal.target, db.teamGoal.progress + Math.round(m.coins/2));
+      dayOf(db,op.date).missions[m.id] = true;
+    },
+    "mission.undo"(db,op){
+      const m = db.missions.find(x=>x.id===op.id); if(!m || m.status!=="done") return;
+      if(db.state.coins[m.by]!=null) db.state.coins[m.by] = Math.max(0, db.state.coins[m.by]-m.coins);
+      m.status="claimed";
+    },
+    "reward.redeem"(db,op){
+      const r = db.rewards.find(x=>x.id===op.rid); if(!r) return;
+      if(db.state.redemptions.some(x=>x.id===op.rdId)) return;          /* schon angewendet */
+      if((db.state.coins[op.pid]||0) < r.cost) return;
+      db.state.coins[op.pid] -= r.cost;
+      db.state.redemptions.unshift({ id:op.rdId, reward:r.id, title:r.title, person:op.pid, cost:r.cost, date:op.date, used:false });
+    },
+    "redemption.used"(db,op){ const r = db.state.redemptions.find(x=>x.id===op.id); if(r) r.used = op.value; },
+
+    "media.add"(db,op){ const d = dayOf(db,op.date); (d.media[op.pid] = d.media[op.pid]||[]);
+      if(!d.media[op.pid].some(e=>e.id===op.entryId)) d.media[op.pid].push({ id:op.entryId, min:op.min, at:op.at }); },
+    "media.remove"(db,op){ const d = dayOf(db,op.date); if(d.media[op.pid]) d.media[op.pid] = d.media[op.pid].filter((e,i)=> (e.id||String(i)) !== op.entryId); },
+
+    "evening.swap"(db,op){ dayOf(db,op.date).eveningSwap = op.value; },
+
+    "coll.upsert"(db,op){ const l = db[op.coll]; if(!l) return;
+      const i = l.findIndex(x=>x.id===op.obj.id); if(i>=0) l[i] = Object.assign({}, l[i], op.obj); else l.push(op.obj); },
+    "coll.remove"(db,op){ if(db[op.coll]) db[op.coll] = db[op.coll].filter(x=>x.id!==op.id); },
+    "settings.patch"(db,op){ Object.assign(db.settings, op.patch); },
+    "meta.patch"(db,op){ Object.assign(db.meta, op.patch); },
+    "coins.set"(db,op){ if(db.state.coins[op.pid]!=null) db.state.coins[op.pid] = Math.max(0, op.n|0); }
+  };
+  function apply(db, op){
+    const h = H[op.kind];
+    if(!h){ console.warn("Unbekannte Aktion übersprungen:", op.kind); return; }
+    h(db, op);
+  }
+  return { apply, dayOf, kinds:Object.keys(H) };
+})();
+
+/* ==========================================================================
+   3) STORE — lokaler Datenstand + Aktionsprotokoll.
+      Ohne Sync verhält er sich genau wie vorher (alles im LocalStorage).
+   ========================================================================== */
+const Store = (function(){
+  const KEY = "nestwerk.family.v2", KEY_OLD = "nestwerk.family.v1";
+  let db = null, queue = [], lastSeq = 0, bootstrapSeq = 0, seen = {};
+  const subs = [];
+
+  function load(){
+    let saved = null;
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(raw) saved = JSON.parse(raw);
+      else { const old = localStorage.getItem(KEY_OLD); if(old) saved = { db: JSON.parse(old) }; }
+    }catch(e){ console.warn("Gespeicherte Daten unlesbar, starte neu.", e); }
+
+    const base = defaultDB();
+    db = saved && saved.db ? merge(base, saved.db) : base;
+    queue = ((saved && saved.queue) || []).map(o=> o.opId ? o : Object.assign({}, o, { opId: uid("op") }));
+    lastSeq = (saved && saved.lastSeq) || 0;
+    bootstrapSeq = (saved && saved.bootstrapSeq) || 0;
+    seen = {}; ((saved && saved.seen) || []).forEach(id=> seen[id]=1);
+    return db;
+  }
+  function merge(base, saved){
+    const out = JSON.parse(JSON.stringify(base));
+    Object.keys(saved).forEach(k=>{
+      if(k==="meta"){ out.meta = Object.assign({}, base.meta, saved.meta); return; }
+      if(Array.isArray(saved[k]) || typeof saved[k]!=="object" || saved[k]===null){ out[k] = saved[k]; return; }
+      out[k] = Object.assign({}, base[k]||{}, saved[k]);
+    });
+    if(saved.state) out.state = Object.assign({}, base.state, saved.state);
+    return out;
+  }
+  function save(){
+    try{
+      const ids = Object.keys(seen); const keep = ids.length>2000 ? ids.slice(-2000) : ids;
+      localStorage.setItem(KEY, JSON.stringify({ version:2, db, queue, lastSeq, bootstrapSeq, seen:keep }));
+    }catch(e){
+      console.error("Speichern fehlgeschlagen", e);
+      if(typeof UI!=="undefined") UI.toast("Speicher voll — bitte exportieren und zurücksetzen.");
+    }
+  }
+  function notify(){ subs.forEach(f=>{ try{ f(); }catch(e){ console.error(e); } }); }
+
+  /* Die einzige Mutationsstelle: eine Aktion anwenden, sichern, verteilen. */
+  function dispatch(part){
+    /* opId zuletzt setzen: Nutzlasten enthalten oft ein eigenes "id"-Feld
+       (Missions-ID, Chore-ID …) und dürfen die Identität der Aktion nicht überschreiben. */
+    const op = Object.assign({}, part, { opId: uid("op"), ts: Date.now(),
+                               actor: (typeof Sync!=="undefined" ? Sync.actorName() : "lokal") });
+    try{ Ops.apply(db, op); }
+    catch(e){ console.error("Aktion fehlgeschlagen", e); if(typeof UI!=="undefined") UI.toast("Das hat nicht geklappt."); return null; }
+    seen[op.opId] = 1; queue.push(op);
+    save(); notify();
+    if(typeof Sync!=="undefined") Sync.nudge();
+    return op;
+  }
+  /* Aktion von einem anderen Gerät */
+  function applyRemote(op){
+    if(!op || !op.opId || seen[op.opId]) return false;
+    try{ Ops.apply(db, op); }catch(e){ console.error("Fremde Aktion fehlgeschlagen", e); }
+    seen[op.opId] = 1; return true;
+  }
+  function replaceDB(next){ db = merge(defaultDB(), next); }
+
+  function get(){ return db; }
+  function subscribe(fn){ subs.push(fn); }
+  function pending(){ return queue.slice(); }
+  function clearPending(ids){ const s={}; ids.forEach(i=>s[i]=1); queue = queue.filter(o=>!s[o.opId]); }
+  function seq(){ return lastSeq; }
+  function setSeq(n){ lastSeq = Math.max(lastSeq, n||0); }
+  function bootSeq(){ return bootstrapSeq; }
+  function setBootSeq(n){ bootstrapSeq = n||0; }
+
+  function reset(){
+    localStorage.removeItem(KEY); localStorage.removeItem(KEY_OLD);
+    db = defaultDB(); queue = []; lastSeq = 0; bootstrapSeq = 0; seen = {};
+    save(); notify();
+  }
+  function importJSON(text){
+    const parsed = JSON.parse(text);
+    const payload = parsed && parsed.db ? parsed.db : parsed;
+    if(!payload || !payload.people) throw new Error("Keine gültige Nestwerk-Sicherung.");
+    replaceDB(payload); queue = []; save(); notify();
+  }
+  function exportJSON(){ return JSON.stringify(db, null, 2); }
+
+  function day(dateKey){ return Ops.dayOf(db, dateKey); }
+  function dayRead(dateKey){
+    return db.state.log[dateKey] || { basics:{}, chores:{}, missions:{}, media:{}, assign:{}, eveningSwap:false };
+  }
+  return { load, save, get, subscribe, dispatch, applyRemote, replaceDB, notify,
+           pending, clearPending, seq, setSeq, bootSeq, setBootSeq,
+           reset, importJSON, exportJSON, day, dayRead };
+})();
+
+
+const P = id => Store.get().people.find(p=>p.id===id) || {id:id,name:id,colorVar:"--brand",soft:"#EEE"};
+const pcol = id => "var("+(P(id).colorVar||"--brand")+")";
+
+/* ==========================================================================
+   3) ART — eigene Illustrationen (SVG, inline, keine fremden Figuren)
+      Gemeinsame Designsprache: flache Formen, weiche Rundungen,
+      gedämpfte Palette, keine Outlines außer als Akzent.
+   ========================================================================== */
+const Art = (function(){
+  const C = { skin:"#F0D2B8", skin2:"#E3BE9F", dark:"#33403A", white:"#FFFFFF",
+              green:"#6E9C86", gold:"#D9A441", blue:"#7E9BC0", clay:"#C98A6D",
+              violet:"#A88CC0", rose:"#D4869E", sand:"#EFE6D9", teal:"#4C8579" };
+
+  function svg(vb, inner, cls){ return '<svg viewBox="'+vb+'" class="'+(cls||"")+'" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+inner+'</svg>'; }
+
+  /* ---------- Gesichter ---------- */
+  function face(o){
+    const eye = o.eye;
+    return ''
+     + (o.behind||'')
+     + '<ellipse cx="50" cy="60" rx="16" ry="10" fill="'+C.skin2+'"/>'                 /* Hals/Schulter */
+     + '<rect x="30" y="66" width="40" height="22" rx="11" fill="'+o.shirt+'"/>'
+     + '<circle cx="50" cy="43" r="21" fill="'+C.skin+'"/>'
+     + (o.hair||'')
+     + '<circle cx="43" cy="43" r="3.4" fill="'+eye+'"/><circle cx="57" cy="43" r="3.4" fill="'+eye+'"/>'
+     + '<circle cx="44.1" cy="41.9" r="1.15" fill="'+C.white+'"/><circle cx="58.1" cy="41.9" r="1.15" fill="'+C.white+'"/>'
+     + '<path d="M45 51 Q50 55.5 55 51" stroke="'+C.dark+'" stroke-width="2.1" fill="none" stroke-linecap="round"/>'
+     + '<circle cx="37.5" cy="49" r="3" fill="'+C.clay+'" opacity=".28"/><circle cx="62.5" cy="49" r="3" fill="'+C.clay+'" opacity=".28"/>'
+     + (o.front||'');
+  }
+  const HAIR = {
+    henry:'<path d="M29 41c-1-13 8-20 21-20s22 7 21 20c-2-4-4-6-7-5-2-4-6-2-8-5-3 4-9 5-14 4-3 3-6 1-8 3-2-1-3 .5-5 3z" fill="#8A6A42"/>'
+        + '<path d="M31 33c3-4 7-2 9-5 2 3 6 2 8 0" stroke="#7A5C39" stroke-width="2" fill="none" stroke-linecap="round"/>',
+    hannah:'<path d="M25 44c0-14 10-23 25-23s25 9 25 23c0 6-2 8-2 8l-2-13c-6 5-31 6-40-1l-3 14s-3-2-3-8z" fill="#A98352"/>',
+    emma:'<path d="M28 45c0-14 9-24 22-24s22 10 22 24c0 5-1 8-1 8l-2-12c-6 4-30 5-37-1l-2 13s-2-3-2-8z" fill="#BE9A64"/>',
+    mama:'<path d="M29 42c0-13 9-21 21-21s21 8 21 21c0 3-1 5-1 5l-2-11c-6 4-28 5-35 0l-2 11s-2-2-2-5z" fill="#D89A6A"/>',
+    papa:'<g fill="#3B322C"><circle cx="35" cy="34" r="6.5"/><circle cx="44" cy="28.5" r="7.5"/><circle cx="55" cy="28.5" r="7.5"/><circle cx="64" cy="34" r="6.5"/><circle cx="50" cy="26" r="7"/></g>'
+  };
+  const BEHIND = {
+    hannah:'<path d="M27 40c-4 22-3 38 1 50h8c-4-14-4-30-2-46zM73 40c4 22 3 38-1 50h-8c4-14 4-30 2-46z" fill="#A98352"/>'
+          +'<path d="M31 84h38c1 6 1 9 0 12H31c-1-3-1-6 0-12z" fill="#9A7648" opacity=".55"/>',
+    emma:'<path d="M28 42c-3 12-3 20-1 26h6c-2-8-2-16-1-24zM72 42c3 12 3 20 1 26h-6c2-8 2-16 1-24z" fill="#BE9A64"/>',
+    mama:'<path d="M68 32c9 2 14 10 12 20-2 9-8 12-12 10 4-6 5-14 2-20z" fill="#D89A6A"/><circle cx="70" cy="34" r="5" fill="#C98C60"/>'
+  };
+  const FRONT = {
+    papa:'<path d="M35 46c1 9 7 15 15 15s14-6 15-15c1 8-1 14-4 17-3 3-7 4-11 4s-8-1-11-4c-3-3-5-9-4-17z" fill="#3B322C" opacity=".82"/>'
+        +'<path d="M44 52h12v3H44z" fill="'+C.skin+'" opacity=".9"/>'
+  };
+  const SHIRT = { henry:"#4B7FA6", hannah:"#8C6BB4", emma:"#E09A4A", mama:"#BF5C85", papa:"#3C7A6C" };
+  const EYE   = { henry:"#4E7A4A", hannah:"#3F6C9E", emma:"#3F6C9E", mama:"#4E7A4A", papa:"#3F6C9E" };
+
+  function avatar(id, cls){
+    const inner = '<circle cx="50" cy="50" r="50" fill="'+(P(id).soft||"#EEE")+'"/>'
+      + face({ hair:HAIR[id]||"", behind:BEHIND[id]||"", front:FRONT[id]||"", shirt:SHIRT[id]||"#7E9BC0", eye:EYE[id]||C.dark });
+    return svg("0 0 100 100", inner, cls);
+  }
+
+  /* ---------- Companions (eigene Fantasiewesen) ---------- */
+  const COMP = {
+    flint:{ name:"Flint", body:"#6E9C86", accent:"#4C7B66",
+      art:'<ellipse cx="50" cy="86" rx="24" ry="5" fill="#000" opacity=".07"/>'
+        +'<path d="M26 44l-4-16 15 8zM74 44l4-16-15 8z" fill="#4C7B66"/>'
+        +'<ellipse cx="50" cy="58" rx="26" ry="24" fill="#6E9C86"/>'
+        +'<path d="M74 62c9 2 13 8 11 14-3-5-8-6-13-4z" fill="#8FB8A3"/>'
+        +'<circle cx="41" cy="54" r="4" fill="#2B3A33"/><circle cx="59" cy="54" r="4" fill="#2B3A33"/>'
+        +'<circle cx="42.4" cy="52.6" r="1.4" fill="#fff"/><circle cx="60.4" cy="52.6" r="1.4" fill="#fff"/>'
+        +'<path d="M46 63q4 4 8 0" stroke="#2B3A33" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+        +'<path d="M50 26c6 2 8 8 5 12-2-5-6-6-9-3 0-4 1-7 4-9z" fill="#9CC7AE"/>' },
+    luma:{ name:"Luma", body:"#A88CC0", accent:"#8A6FB0",
+      art:'<ellipse cx="50" cy="86" rx="22" ry="5" fill="#000" opacity=".07"/>'
+        +'<path d="M38 36c-2-14 2-20 5-20s6 8 5 18zM62 36c2-14-2-20-5-20s-6 8-5 18z" fill="#BFA6D4"/>'
+        +'<ellipse cx="50" cy="60" rx="24" ry="22" fill="#A88CC0"/>'
+        +'<circle cx="41" cy="57" r="3.8" fill="#31283C"/><circle cx="59" cy="57" r="3.8" fill="#31283C"/>'
+        +'<circle cx="42.3" cy="55.7" r="1.3" fill="#fff"/><circle cx="60.3" cy="55.7" r="1.3" fill="#fff"/>'
+        +'<path d="M47 65q3 3 6 0" stroke="#31283C" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+        +'<circle cx="33" cy="63" r="3.4" fill="#E2B7CC" opacity=".8"/><circle cx="67" cy="63" r="3.4" fill="#E2B7CC" opacity=".8"/>'
+        +'<path d="M50 8l2.6 5.4L58 16l-5.4 2.6L50 24l-2.6-5.4L42 16l5.4-2.6z" fill="#EBD9A0"/>' },
+    piko:{ name:"Piko", body:"#E9B45F", accent:"#D08F33",
+      art:'<ellipse cx="50" cy="87" rx="21" ry="5" fill="#000" opacity=".07"/>'
+        +'<ellipse cx="26" cy="62" rx="8" ry="11" fill="#F2CB8C"/><ellipse cx="74" cy="62" rx="8" ry="11" fill="#F2CB8C"/>'
+        +'<circle cx="50" cy="58" r="26" fill="#E9B45F"/>'
+        +'<circle cx="41" cy="54" r="4.2" fill="#403223"/><circle cx="59" cy="54" r="4.2" fill="#403223"/>'
+        +'<circle cx="42.5" cy="52.5" r="1.5" fill="#fff"/><circle cx="60.5" cy="52.5" r="1.5" fill="#fff"/>'
+        +'<path d="M46 63h8l-4 5z" fill="#D08F33"/>'
+        +'<circle cx="34" cy="63" r="4" fill="#EF9E8E" opacity=".65"/><circle cx="66" cy="63" r="4" fill="#EF9E8E" opacity=".65"/>'
+        +'<path d="M44 30c2-6 10-6 12 0-4-2-8-2-12 0z" fill="#F6DDAE"/>' },
+    sora:{ name:"Sora", body:"#D4869E", accent:"#B7647F",
+      art:'<ellipse cx="50" cy="86" rx="20" ry="5" fill="#000" opacity=".07"/>'
+        +'<path d="M24 50c-8-6-9-14-4-16 6-2 12 4 14 10z" fill="#E8AEC0"/>'
+        +'<path d="M76 50c8-6 9-14 4-16-6-2-12 4-14 10z" fill="#E8AEC0"/>'
+        +'<ellipse cx="50" cy="60" rx="23" ry="21" fill="#D4869E"/>'
+        +'<path d="M34 44l-3-11 11 6zM66 44l3-11-11 6z" fill="#B7647F"/>'
+        +'<circle cx="42" cy="57" r="3.8" fill="#3A2630"/><circle cx="58" cy="57" r="3.8" fill="#3A2630"/>'
+        +'<circle cx="43.3" cy="55.7" r="1.3" fill="#fff"/><circle cx="59.3" cy="55.7" r="1.3" fill="#fff"/>'
+        +'<path d="M47 64q3 3 6 0" stroke="#3A2630" stroke-width="2.2" fill="none" stroke-linecap="round"/>' },
+    bramble:{ name:"Bramble", body:"#4C8579", accent:"#38665D",
+      art:'<ellipse cx="50" cy="87" rx="22" ry="5" fill="#000" opacity=".07"/>'
+        +'<path d="M32 34l-4-12 12 6zM68 34l4-12-12 6z" fill="#38665D"/>'
+        +'<ellipse cx="50" cy="60" rx="25" ry="23" fill="#4C8579"/>'
+        +'<ellipse cx="50" cy="66" rx="15" ry="12" fill="#6FA396" opacity=".7"/>'
+        +'<circle cx="41" cy="55" r="6.5" fill="#EDE4D5"/><circle cx="59" cy="55" r="6.5" fill="#EDE4D5"/>'
+        +'<circle cx="41" cy="55" r="3.4" fill="#2A3B36"/><circle cx="59" cy="55" r="3.4" fill="#2A3B36"/>'
+        +'<circle cx="42.2" cy="53.8" r="1.2" fill="#fff"/><circle cx="60.2" cy="53.8" r="1.2" fill="#fff"/>'
+        +'<path d="M46 63h8l-4 5z" fill="#D9A441"/>' }
+  };
+  function companion(key, cls){ const c = COMP[key]; if(!c) return ""; return svg("0 0 100 100", c.art, cls); }
+  function companionName(key){ return (COMP[key]||{}).name || ""; }
+
+  /* ---------- Aufgaben-Illustrationen (120×120) ---------- */
+  const ILLU = {
+    lunchbox:'<rect x="22" y="46" width="76" height="50" rx="10" fill="#7E9BC0"/><rect x="22" y="46" width="76" height="14" rx="7" fill="#9DB6D3"/><rect x="48" y="34" width="24" height="10" rx="5" fill="#5E7B9E"/><rect x="34" y="66" width="24" height="18" rx="5" fill="#EFE6D9"/><rect x="64" y="66" width="20" height="18" rx="5" fill="#D9A441"/>',
+    folder:'<path d="M20 34h32l8 10h40a8 8 0 018 8v44a8 8 0 01-8 8H20a8 8 0 01-8-8V42a8 8 0 018-8z" fill="#D9A441"/><rect x="30" y="56" width="60" height="34" rx="5" fill="#F6EFE2"/><path d="M40 66h40M40 76h28" stroke="#C0B49E" stroke-width="4" stroke-linecap="round"/>',
+    backpack:'<rect x="26" y="42" width="68" height="66" rx="18" fill="#6E9C86"/><path d="M42 46v-6a18 18 0 0136 0v6" stroke="#4C7B66" stroke-width="7" fill="none"/><rect x="38" y="66" width="44" height="26" rx="9" fill="#EFE6D9"/><rect x="52" y="74" width="16" height="9" rx="4" fill="#D9A441"/>',
+    room:'<path d="M18 60L60 26l42 34v42a6 6 0 01-6 6H24a6 6 0 01-6-6z" fill="#C98A6D"/><rect x="46" y="72" width="28" height="36" rx="4" fill="#EFE6D9"/><rect x="30" y="70" width="12" height="12" rx="3" fill="#F6EFE2"/><rect x="78" y="70" width="12" height="12" rx="3" fill="#F6EFE2"/>',
+    laundry:'<path d="M30 52h60l-6 52a8 8 0 01-8 7H44a8 8 0 01-8-7z" fill="#9DB6D3"/><rect x="26" y="42" width="68" height="14" rx="7" fill="#7E9BC0"/><path d="M48 68c8 6 16-6 24 0M46 84c8 6 16-6 24 0" stroke="#EFE6D9" stroke-width="5" fill="none" stroke-linecap="round"/>',
+    fold:'<rect x="18" y="42" width="84" height="22" rx="8" fill="#EFE6D9"/><rect x="24" y="66" width="72" height="20" rx="8" fill="#A88CC0"/><rect x="30" y="88" width="60" height="18" rx="8" fill="#7E9BC0"/>',
+    sportbag:'<rect x="16" y="52" width="88" height="48" rx="16" fill="#4C8579"/><path d="M44 52v-8a16 16 0 0132 0v8" stroke="#38665D" stroke-width="7" fill="none"/><rect x="16" y="70" width="88" height="10" fill="#D9A441"/>',
+    towel:'<rect x="24" y="30" width="72" height="14" rx="7" fill="#C0B49E"/><path d="M36 44h48v54a10 10 0 01-10 10H46a10 10 0 01-10-10z" fill="#E5AEB9"/><path d="M36 62h48M36 78h48" stroke="#F6EFE2" stroke-width="5"/>',
+    toybox:'<rect x="20" y="54" width="80" height="52" rx="10" fill="#C98A6D"/><rect x="14" y="44" width="92" height="16" rx="8" fill="#B0745A"/><circle cx="44" cy="36" r="13" fill="#7E9BC0"/><rect x="62" y="24" width="22" height="22" rx="5" fill="#D9A441" transform="rotate(12 73 35)"/><path d="M52 78h16" stroke="#F6EFE2" stroke-width="6" stroke-linecap="round"/>',
+    tooth:'<path d="M36 30c10-8 18 2 24 2s14-10 24-2c9 7 6 24 2 38-3 11-6 32-12 32s-6-22-14-22-8 22-14 22-9-21-12-32c-4-14-7-31 2-38z" fill="#F6F2EA"/><path d="M52 48c-6 2-8 8-7 14" stroke="#D8D0C0" stroke-width="5" stroke-linecap="round" fill="none"/><rect x="70" y="18" width="34" height="10" rx="5" fill="#6E9C86" transform="rotate(28 87 23)"/>',
+    shoes:'<path d="M14 76c0-8 4-12 12-12l14 8 16 4c8 2 12 6 12 12H18a4 4 0 01-4-4z" fill="#7E9BC0"/><path d="M50 76c0-8 4-12 12-12l14 8 16 4c8 2 12 6 12 12H54a4 4 0 01-4-4z" fill="#5E7B9E"/><path d="M20 84h84" stroke="#3B4A5C" stroke-width="6" stroke-linecap="round"/>',
+    plate:'<circle cx="60" cy="68" r="38" fill="#EFE6D9"/><circle cx="60" cy="68" r="26" fill="#F8F4EC"/><rect x="20" y="34" width="6" height="46" rx="3" fill="#C0B49E"/><rect x="94" y="34" width="6" height="46" rx="3" fill="#C0B49E"/>',
+    soap:'<rect x="34" y="52" width="52" height="46" rx="14" fill="#A88CC0"/><rect x="48" y="34" width="24" height="20" rx="8" fill="#8A6FB0"/><circle cx="44" cy="28" r="7" fill="#CFE2EC"/><circle cx="76" cy="22" r="5" fill="#CFE2EC"/><circle cx="62" cy="16" r="4" fill="#CFE2EC"/>',
+    drawer:'<rect x="18" y="30" width="84" height="76" rx="10" fill="#C98A6D"/><rect x="26" y="40" width="68" height="26" rx="6" fill="#EFE6D9"/><rect x="26" y="72" width="68" height="26" rx="6" fill="#EFE6D9"/><rect x="52" y="50" width="16" height="6" rx="3" fill="#B0745A"/><rect x="52" y="82" width="16" height="6" rx="3" fill="#B0745A"/>',
+    sparkle:'<path d="M60 16l9 27 27 9-27 9-9 27-9-27-27-9 27-9z" fill="#D9A441"/><path d="M28 84l4 11 11 4-11 4-4 11-4-11-11-4 11-4z" fill="#E9C579"/>',
+    leaf:'<path d="M92 22C50 22 26 44 26 74c0 10 4 18 4 18s26-4 42-20c14-14 20-34 20-50z" fill="#6E9C86"/><path d="M84 30C60 46 42 62 30 92" stroke="#4C7B66" stroke-width="5" stroke-linecap="round" fill="none"/>',
+    fridge:'<rect x="30" y="14" width="60" height="94" rx="12" fill="#CFD8D2"/><path d="M30 52h60" stroke="#A8B5AD" stroke-width="4"/><rect x="76" y="30" width="6" height="14" rx="3" fill="#7C8A82"/><rect x="76" y="62" width="6" height="14" rx="3" fill="#7C8A82"/>',
+    car:'<path d="M18 78l8-22a12 12 0 0111-8h46a12 12 0 0111 8l8 22z" fill="#7E9BC0"/><rect x="14" y="76" width="92" height="20" rx="9" fill="#5E7B9E"/><circle cx="36" cy="98" r="9" fill="#3B4A5C"/><circle cx="84" cy="98" r="9" fill="#3B4A5C"/>',
+    movie:'<rect x="16" y="40" width="88" height="60" rx="10" fill="#4A5560"/><path d="M16 40l14-14 12 14zM44 40l14-14 12 14zM72 40l14-14 12 14z" fill="#69757F"/><path d="M52 58l24 12-24 12z" fill="#EFE6D9"/>',
+    tablet:'<rect x="26" y="18" width="68" height="88" rx="12" fill="#4A5560"/><rect x="34" y="28" width="52" height="66" rx="5" fill="#CFE2EC"/><circle cx="60" cy="100" r="3.5" fill="#8B959D"/>',
+    tv:'<rect x="14" y="26" width="92" height="60" rx="10" fill="#4A5560"/><rect x="22" y="34" width="76" height="44" rx="5" fill="#CFE2EC"/><rect x="46" y="94" width="28" height="8" rx="4" fill="#69757F"/><path d="M60 86v8" stroke="#69757F" stroke-width="6"/>',
+    moon:'<path d="M76 22a40 40 0 100 76 34 34 0 010-76z" fill="#D9A441"/><circle cx="34" cy="30" r="4" fill="#E9C579"/><circle cx="24" cy="52" r="3" fill="#E9C579"/>',
+    friends:'<circle cx="42" cy="46" r="16" fill="#D4869E"/><circle cx="78" cy="46" r="16" fill="#7E9BC0"/><path d="M14 100c0-16 12-26 28-26s28 10 28 26z" fill="#E5AEB9"/><path d="M50 100c0-16 12-26 28-26s28 10 28 26z" fill="#9DB6D3"/>',
+    coin:'<circle cx="60" cy="60" r="40" fill="#D9A441"/><circle cx="60" cy="60" r="31" fill="#E9C579"/><path d="M60 40v40M50 50h16a8 8 0 010 16H54a8 8 0 000 16h16" stroke="#B5822A" stroke-width="6" fill="none" stroke-linecap="round"/>',
+    map:'<path d="M16 32l28-12 32 12 28-12v76l-28 12-32-12-28 12z" fill="#EFE6D9"/><path d="M44 20v76M76 32v76" stroke="#C0B49E" stroke-width="4"/><circle cx="60" cy="52" r="10" fill="#C6493F"/>',
+    heart:'<path d="M60 100S18 76 18 48a22 22 0 0142-10 22 22 0 0142 10c0 28-42 52-42 52z" fill="#D4869E"/>',
+    box:'<path d="M20 44l40-18 40 18v46L60 108 20 90z" fill="#C98A6D"/><path d="M20 44l40 18 40-18M60 62v46" stroke="#B0745A" stroke-width="5" fill="none"/>',
+    broom:'<rect x="54" y="12" width="9" height="52" rx="4.5" fill="#C0B49E"/><path d="M40 62h38l10 40H30z" fill="#D9A441"/><path d="M46 74v22M58 74v22M70 74v22" stroke="#B5822A" stroke-width="4"/>',
+    star:'<path d="M60 14l13 30 32 3-24 22 7 32-28-17-28 17 7-32-24-22 32-3z" fill="#D9A441"/>'
+  };
+  function illu(key, cls){ return svg("0 0 120 120", ILLU[key] || ILLU.sparkle, (cls||"")); }
+
+  /* ---------- UI-Icons (Strich) ---------- */
+  const s='stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  const ICON = {
+    today:'<path d="M12 3v2M4.2 6.2l1.4 1.4M3 15h2M19 15h2M18.4 7.6l1.4-1.4" '+s+'/><circle cx="12" cy="14" r="5" '+s+'/><path d="M4 21h16" '+s+'/>',
+    me:'<circle cx="12" cy="8" r="4" '+s+'/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" '+s+'/>',
+    jobs:'<rect x="3" y="7" width="18" height="13" rx="3" '+s+'/><path d="M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7M3 12h18" '+s+'/>',
+    house:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z" '+s+'/><path d="M9.5 21v-6h5v6" '+s+'/>',
+    admin:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10" '+s+'/><circle cx="16" cy="7" r="2.2" '+s+'/><circle cx="8" cy="17" r="2.2" '+s+'/>',
+    check:'<path d="M4 12.5l5 5L20 6.5"/>',
+    plus:'<path d="M12 5v14M5 12h14" '+s+'/>',
+    trash:'<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6" '+s+'/>',
+    edit:'<path d="M4 20h4L19 9a2.8 2.8 0 10-4-4L4 16z" '+s+'/>',
+    back:'<path d="M15 5l-7 7 7 7" '+s+'/>',
+    fwd:'<path d="M9 5l7 7-7 7" '+s+'/>',
+    down:'<path d="M6 9l6 6 6-6" '+s+'/>',
+    close:'<path d="M6 6l12 12M18 6L6 18" '+s+'/>',
+    clock:'<circle cx="12" cy="12" r="9" '+s+'/><path d="M12 7v5.5l3.5 2" '+s+'/>',
+    bike:'<circle cx="6" cy="17" r="3.5" '+s+'/><circle cx="18" cy="17" r="3.5" '+s+'/><path d="M6 17l5-8h4l3 8M9 9h5" '+s+'/>',
+    carI:'<path d="M4 16v-3l2-5h12l2 5v3M4 16h16M4 16v2h3v-2M17 16v2h3v-2" '+s+'/>',
+    walk:'<circle cx="13" cy="4.5" r="1.8" '+s+'/><path d="M11 21l2-6-3-3 1-4 3 2 3 1M10 12l-2 4" '+s+'/>',
+    lock:'<rect x="5" y="10" width="14" height="10" rx="2.5" '+s+'/><path d="M8.5 10V7.5a3.5 3.5 0 017 0V10" '+s+'/>',
+    unlock:'<rect x="5" y="10" width="14" height="10" rx="2.5" '+s+'/><path d="M8.5 10V7.5a3.5 3.5 0 016.9-.9" '+s+'/>',
+    coinI:'<circle cx="12" cy="12" r="8.5" '+s+'/><path d="M12 7.5v9M9.6 9.5h3.4a1.9 1.9 0 010 3.8h-2a1.9 1.9 0 000 3.8h3.4" '+s+'/>',
+    refresh:'<path d="M20 12a8 8 0 11-2.6-5.9M20 4v4h-4" '+s+'/>',
+    download:'<path d="M12 4v11M7.5 11L12 15.5 16.5 11M4 19h16" '+s+'/>',
+    upload:'<path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M4 19h16" '+s+'/>',
+    warn:'<path d="M12 4l9 16H3z" '+s+'/><path d="M12 10v4M12 17h.01" '+s+'/>',
+    bulb:'<path d="M9 17h6M10 20h4M12 3a6 6 0 013.5 10.9c-.6.5-1 1.2-1 2H9.5c0-.8-.4-1.5-1-2A6 6 0 0112 3z" '+s+'/>'
+  };
+  function icon(k){ return svg("0 0 24 24", ICON[k]||"", ""); }
+  function mark(){ return svg("0 0 100 100",
+    '<rect x="4" y="4" width="92" height="92" rx="28" fill="#2F5D50"/>'
+    +'<path d="M28 68V34l22 20 22-20v34" stroke="#EFE6D9" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="50" cy="72" r="6" fill="#D9A441"/>',"");
+  }
+  const checkPath = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+  return { avatar, companion, companionName, illu, icon, mark, checkPath, C };
+})();
+
+/* ==========================================================================
+   4) ENGINE — reine Funktionen. Kein Zustand, keine Seiteneffekte.
+      Hier entscheidet die App, damit niemand sonst entscheiden muss.
+   ========================================================================== */
+const Engine = (function(){
+
+  /* ---- A/B-Woche ---------------------------------------------------- */
+  function mondayOf(k){ return T.addDays(k, -(T.dow(k)-1)); }
+  function weekType(k){
+    const db = Store.get();
+    const weeks = Math.floor(T.diffDays(mondayOf(k), mondayOf(db.meta.abAnchor))/7);
+    const even = ((weeks % 2)+2)%2 === 0;
+    return even ? db.meta.abAnchorWeek : (db.meta.abAnchorWeek==="A"?"B":"A");
+  }
+
+  /* ---- Arbeitszeit eines Elternteils --------------------------------- */
+  function workBlocks(pid, k){
+    const db = Store.get(), w = db.work[pid]; if(!w) return [];
+    const plan = w[T.dow(k)]; if(!plan || plan.mode==="off") return [];
+    const office = plan.mode==="office";
+    const start = office ? w.officeStart : w.homeStart;
+    const end   = office ? w.officeEnd   : w.homeEnd;
+    const main  = T.min(end)-T.min(start);
+    const out = [{ start, end, title:"Arbeit ("+(office?"Büro":"Homeoffice")+")", kind:"work", home:!office }];
+    const need = (w.targetDaily||0) - main;
+    if(need >= 15){
+      out.unshift({ start:w.earlyStart, end:T.hhmm(T.min(w.earlyStart)+need),
+                    title:"Frühblock Arbeit", kind:"work", soft:true });
+    }
+    if(office){
+      out.unshift({ start:T.hhmm(T.min(start)-(w.commute||0)), end:start, title:"Fahrt ins Büro", kind:"travel" });
+      out.push({ start:end, end:T.hhmm(T.min(end)+(w.commute||0)), title:"Fahrt nach Hause", kind:"travel" });
+    }
+    return out;
+  }
+  function workSummary(pid, k){
+    const db = Store.get(), w = db.work[pid]; if(!w) return null;
+    const plan = w[T.dow(k)];
+    if(!plan || plan.mode==="off") return { mode:"off", label:"arbeitsfrei" };
+    return { mode:plan.mode, label: plan.mode==="office"?"Bürotag":"Homeoffice" };
+  }
+  function isHome(pid, k, minute){
+    const db = Store.get(), w = db.work[pid]; if(!w) return true;
+    const plan = w[T.dow(k)];
+    if(!plan || plan.mode==="off" || plan.mode==="home") return true;   // im Haus
+    const end = T.min(w.officeEnd) + (w.commute||0);
+    return minute >= end;
+  }
+
+  /* ---- Henrys Stundenplan -------------------------------------------- */
+  function henrySchool(k){
+    const db = Store.get(), d = T.dow(k);
+    if(d>5) return null;
+    const row = (db.henryTimetable[weekType(k)]||{})[d] || [];
+    const subs = [];
+    row.forEach((s,i)=>{ if(s) subs.push({ block:db.schoolBlocks[i], subject:s }); });
+    if(!subs.length) return null;
+    return { start:subs[0].block.start, end:subs[subs.length-1].block.end, subjects:subs, week:weekType(k) };
+  }
+
+  /* ---- Termine einer Person an einem Tag ------------------------------ */
+  function eventsFor(pid, k){
+    const db = Store.get(), d = T.dow(k), wt = weekType(k), out = [];
+
+    db.events.forEach(e=>{
+      if(e.person!==pid) return;
+      if(!e.days.includes(d)) return;
+      if(e.week && e.week!=="*" && e.week!==wt) return;
+      if(e.id==="e_han_care"){                                   // Betreuung endet dynamisch
+        const leave = hannahLeave(k);
+        out.push(Object.assign({}, e, { end:leave.time, note:leave.reason, ref:e.id }));
+        return;
+      }
+      if(e.travel && e.travel.min){
+        out.push({ id:e.id+"_t", person:pid, title:travelLabel(e.travel)+" → "+e.title, kind:"travel",
+                   start:T.hhmm(T.min(e.start)-e.travel.min-10), end:e.start, travelOf:e.id });
+      }
+      out.push(Object.assign({}, e, { ref:e.id }));
+    });
+
+    if(pid==="henry"){ const s = henrySchool(k); if(s) out.push({ id:"hen_school", title:"Schule", kind:"school", start:s.start, end:s.end, subjects:s.subjects }); }
+    if(pid==="emma"){
+      const st = Store.get().settings;
+      out.push({ id:"emma_pick", title:"Emma abholen", kind:"logistics", start:st.emmaPickupTarget, end:T.hhmm(T.min(st.emmaPickupTarget)+st.emmaKitaTravel) });
+    }
+    if(P(pid).role==="adult") workBlocks(pid,k).forEach((b,i)=> out.push(Object.assign({id:pid+"_w"+i, person:pid}, b)));
+
+    const ev = eveningPlan(k);
+    if(ev.bedtime===pid) out.push({ id:"ev_bed", title:"Emma ins Bett bringen", kind:"family", start:Store.get().settings.emmaBedStart, end:T.hhmm(T.min(Store.get().settings.emmaBedStart)+45) });
+    if(ev.kitchen===pid) out.push({ id:"ev_kitchen", title:"Küchenabschluss", kind:"family", start:Store.get().settings.kitchenStart, end:T.hhmm(T.min(Store.get().settings.kitchenStart)+30) });
+
+    drives(k).forEach(dr=>{ if(dr.driver===pid) out.push({ id:"drv_"+dr.id, title:"Fahrdienst: "+dr.who+" → "+dr.title, kind:"logistics", start:dr.leave, end:dr.start }); });
+
+    return out.sort((a,b)=> T.min(a.start)-T.min(b.start));
+  }
+  function travelLabel(t){ return t.mode==="car"?"Auto": t.mode==="bike"?"Fahrrad": t.mode==="scooter"?"Roller":"Zu Fuß"; }
+
+  /* ---- Wann geht Hannah aus der Betreuung? ---------------------------- */
+  function hannahLeave(k){
+    const db = Store.get(), st = db.settings, d = T.dow(k);
+    const early = T.min(st.hannahCareEarliest), latest = T.min(st.hannahCareLatest);
+    const hobby = db.events.find(e=> e.person==="hannah" && e.kind==="hobby" && e.days.includes(d));
+    if(hobby && hobby.travel){
+      const need = T.min(hobby.start) - hobby.travel.min - 10;      /* 10 Min Umziehen/Puffer */
+      if(need < latest){
+        return { time:T.hhmm(clamp(need, early, latest)),
+                 reason:"Los um "+T.hhmm(need)+" — "+travelLabel(hobby.travel)+" "+hobby.travel.min+" Min, damit du um "+hobby.start+" beim "+hobby.title+" bist." };
+      }
+    }
+    if(!st.hannahHasKey){
+      const adultHome = ["mama","papa"].some(a=> isHome(a,k,early));
+      if(adultHome) return { time:st.hannahCareEarliest, reason:"Du darfst schon um "+st.hannahCareEarliest+" — zu Hause ist jemand da." };
+      const homeAt = ["mama","papa"].map(a=>{
+        const w = Store.get().work[a], plan = w[d];
+        if(!plan || plan.mode!=="office") return early;
+        return T.min(w.officeEnd)+(w.commute||0);
+      }).sort((x,y)=>x-y)[0];
+      return { time:T.hhmm(clamp(homeAt, early, latest)),
+               reason:"Ohne eigenen Schlüssel: erst los, wenn jemand zu Hause ist (ca. "+T.hhmm(homeAt)+")." };
+    }
+    return { time:st.hannahCareLatest, reason:"Kein Termin heute — Betreuung bis "+st.hannahCareLatest+"." };
+  }
+
+  /* ---- Fahrdienste (Auto, Kinder) ------------------------------------- */
+  function drives(k){
+    const db = Store.get(), d = T.dow(k), out = [];
+    const seen = {};
+    if(d<=5){                                        /* Kita-Abholung ist auch ein Fahrdienst */
+      const st = db.settings;
+      const leave = T.hhmm(T.min(st.emmaPickupTarget) - st.emmaKitaTravel);
+      out.push({ id:"emma_pickup", title:"Kita", who:"Emma", leave, start:st.emmaPickupTarget,
+                 driver: pickDriver(k, T.min(leave), T.min(st.emmaPickupTarget)+st.emmaKitaTravel),
+                 note:"spätestens "+st.emmaPickupLatest });
+    }
+    db.events.forEach(e=>{
+      if(!e.days.includes(d) || !e.travel || e.travel.mode!=="car") return;
+      const per = P(e.person); if(per.role!=="child") return;
+      const sig = e.title+"|"+e.start;
+      if(seen[sig]){ seen[sig].who += " & " + per.name; return; }
+      const leave = T.hhmm(T.min(e.start)-e.travel.min-10);
+      const driver = pickDriver(k, T.min(leave), T.min(e.start));
+      const rec = { id:e.id, title:e.title, who:per.name, leave, start:e.start, driver };
+      seen[sig] = rec; out.push(rec);
+    });
+    return out;
+  }
+  function pickDriver(k, from, to){
+    const cand = ["mama","papa"].filter(a=>{
+      const busy = rawEvents(a,k).some(e=> T.min(e.start) < to && T.min(e.end) > from);
+      const working = workBlocks(a,k).some(b=> !b.soft && !b.home && T.min(b.start) < to && T.min(b.end) > from);
+      return !busy && !working;
+    });
+    if(cand.length) return cand[(T.diffDays(k, Store.get().meta.abAnchor)%cand.length+cand.length)%cand.length];
+    return "mama";
+  }
+  function rawEvents(pid,k){
+    const db=Store.get(), d=T.dow(k), wt=weekType(k);
+    return db.events.filter(e=> e.person===pid && e.days.includes(d) && (!e.week || e.week==="*" || e.week===wt));
+  }
+
+  /* ---- Abendlogik: wer bringt Emma ins Bett, wer macht die Küche? ------ */
+  /* Die Woche wird als Kette gerechnet: nach einem sporterzwungenen Tausch
+     verschiebt sich die Reihenfolge, damit sie sich wieder ausgleicht.       */
+  function eveningWeek(k){
+    const db = Store.get(), st = db.settings;
+    const bedA = T.min(st.emmaBedStart), bedB = bedA+45;
+    const kitA = T.min(st.kitchenStart),  kitB = kitA+30;
+    const mon = mondayOf(k);
+    const weekIdx = Math.floor(T.diffDays(mon, mondayOf(db.meta.abAnchor))/7);
+    let prev = ((((weekIdx%2)+2)%2)===0) ? "papa" : "mama";     /* wer die Vorwoche beendet hat */
+    const out = {};
+    for(let i=0;i<7;i++){
+      const d = T.addDays(mon,i);
+      const busy = (pid,a,b)=> rawEvents(pid,d).some(e=> (e.blocksEvening || e.kind==="sport" || e.kind==="family") && T.min(e.start)<b && T.min(e.end)>a);
+      let bed = prev==="mama" ? "papa" : "mama";
+      let other = bed==="mama" ? "papa" : "mama";
+      let reason = "Regulärer Wechsel — heute ist "+P(bed).name+" dran.";
+      if(busy(bed,bedA,bedB) && !busy(other,bedA,bedB)){
+        const conf = rawEvents(bed,d).find(e=> T.min(e.start)<bedB && T.min(e.end)>bedA);
+        reason = P(bed).name+" hat "+(conf? conf.title+" um "+conf.start : "einen Termin")+" — deshalb übernimmt "+P(other).name+" und ist morgen dafür dran.";
+        const t=bed; bed=other; other=t;
+      }
+      if(Store.dayRead(d).eveningSwap){ const t=bed; bed=other; other=t; reason = "Von Hand getauscht."; }
+      let kitchen = other, both = false, kitchenReason = P(other).name+" macht dafür den Küchenabschluss.";
+      if(busy(other,kitA,kitB)){
+        const conf = rawEvents(other,d).find(e=> T.min(e.start)<kitB && T.min(e.end)>kitA);
+        kitchen = bed; both = true;
+        kitchenReason = P(other).name+" ist wegen "+(conf?conf.title:"einem Termin")+" raus — "+P(bed).name+" übernimmt heute beides.";
+      }
+      out[d] = { bedtime:bed, kitchen, both, reason, kitchenReason, bedTime:st.emmaBedStart, kitchenTime:st.kitchenStart };
+      prev = bed;
+    }
+    return out;
+  }
+  function eveningPlan(k){ return eveningWeek(k)[k]; }
+
+
+  /* ---- Haushaltsgedächtnis -------------------------------------------- */
+  function choreStatus(c, k){
+    const next = T.addDays(c.lastDone || T.addDays(k,-c.interval), c.interval);
+    const days = T.diffDays(next, k);
+    return { next, days, state: days<0?"over": days===0?"today": days<=2?"soon":"ok" };
+  }
+  function choresDue(k){
+    const db = Store.get(), d = T.dow(k), day = Store.dayRead(k);
+    return db.chores.filter(c=>{
+      if(day.chores[c.id]) return true;          /* heute abgehakt: bleibt sichtbar */
+      const st = choreStatus(c,k);
+      if(c.fixedDay) return c.fixedDay===d && st.days<=0;
+      return st.days<=0;
+    }).sort((a,b)=> choreStatus(a,k).days - choreStatus(b,k).days);
+  }
+  /* Verfügbare Minuten im Haushaltsfenster 15:00–20:30 */
+  function freeMinutes(pid, k){
+    const A=T.min("15:00"), B=T.min("20:30");
+    let busy = 0;
+    rawEvents(pid,k).concat(workBlocks(pid,k)).forEach(e=>{
+      const a=Math.max(A,T.min(e.start)), b=Math.min(B,T.min(e.end));
+      if(b>a) busy += (b-a);
+    });
+    const per = P(pid);
+    if(per.role==="child"){                       /* Schule/Betreuung zählt als Belastung */
+      if(pid==="henry"){ const s=henrySchool(k); if(s) busy += 20; }
+      if(per.age<=4) busy += 120;
+    }
+    return Math.max(0, (B-A) - busy);
+  }
+  /* Faire Verteilung: Verfügbarkeit − bisherige Last − heutige Last */
+  function computeAssignments(k){
+    const db = Store.get(), due = choresDue(k), assign = {}, todayLoad = {};
+    db.people.forEach(p=> todayLoad[p.id]=0);
+    const dayIdx = T.diffDays(k, db.meta.abAnchor);
+
+    due.forEach(c=>{
+      if(c.everyone){ assign[c.id]="*"; return; }
+      let pool = (c.pool||[]).filter(pid=>{
+        const p = P(pid); return p && p.age >= (c.minAge||0);
+      });
+      if(!pool.length){ assign[c.id]="mama"; return; }
+      if(c.rotate){
+        const order = pool.slice().sort();
+        for(let i=0;i<order.length;i++){
+          const cand = order[(((dayIdx+i)%order.length)+order.length)%order.length];
+          if(freeMinutes(cand,k) > 45){ assign[c.id]=cand; todayLoad[cand]+=c.effort; return; }
+        }
+        assign[c.id]=order[0]; todayLoad[order[0]]+=c.effort; return;
+      }
+      let best=null, bestScore=-1e9;
+      pool.forEach(pid=>{
+        const hist = db.state.choreHistory[pid]||0;
+        const score = freeMinutes(pid,k)/30 - hist*0.9 - todayLoad[pid]*2.2 - (P(pid).role==="adult"?0:0.4)
+                    - (pid==="mama"?1.2:0);        /* Gegengewicht: Mama nicht als Standard */
+        if(score>bestScore){ bestScore=score; best=pid; }
+      });
+      assign[c.id]=best; todayLoad[best]+= c.effort;
+    });
+    return assign;
+  }
+  function assignmentsFor(k){
+    const day = Store.dayRead(k);
+    const due = choresDue(k);
+    const missing = due.some(c=> !day.assign || !day.assign[c.id]);
+    if(missing) return computeAssignments(k);
+    return day.assign;
+  }
+  function choresForPerson(pid, k){
+    const a = assignmentsFor(k);
+    return choresDue(k).filter(c=> a[c.id]===pid || (a[c.id]==="*" && (c.pool||[]).includes(pid)));
+  }
+
+  /* ---- Daily Basics ---------------------------------------------------- */
+  function basicsFor(pid, k){
+    const d = T.dow(k);
+    return Store.get().basics.filter(b=> b.person===pid && (b.days||[]).includes(d));
+  }
+
+  /* ---- Medienzeit ------------------------------------------------------ */
+  function media(pid, k){
+    const per = P(pid), day = Store.dayRead(k);
+    const budget = per.media||0;
+    const entries = day.media[pid] || [];
+    const used = entries.reduce((s,e)=> s+e.min, 0);
+    const gates = basicsFor(pid,k).filter(b=> b.unlocksMedia);
+    const open  = gates.filter(b=> !day.basics[b.id]);
+    return { budget, used, remaining:Math.max(0,budget-used), entries,
+             unlocked: open.length===0, gates, open };
+  }
+
+  /* ---- Missionen -------------------------------------------------------- */
+  function openMissions(){ return Store.get().missions.filter(m=> m.status==="open"); }
+  function missionsOf(pid){ return Store.get().missions.filter(m=> m.by===pid && m.status!=="open"); }
+
+  /* ---- Tagesüberblick --------------------------------------------------- */
+  function dayStats(pid, k){
+    const day = Store.dayRead(k);
+    const b = basicsFor(pid,k), c = choresForPerson(pid,k), all = missionsOf(pid);
+    const mOpen = all.filter(x=>x.status==="claimed");
+    const mDone = all.filter(x=>x.status==="done" && x.doneAt===k);
+    const total = b.length + c.length + mOpen.length + mDone.length;
+    const done  = b.filter(x=>day.basics[x.id]).length + c.filter(x=>day.chores[x.id]).length + mDone.length;
+    return { total, done, open:Math.max(0,total-done), basics:b, chores:c, missions:mOpen };
+  }
+  function firstEventTime(pid,k){ const e = eventsFor(pid,k); return e.length? e[0].start : null; }
+
+  /* ---- Hinweise für Heute ------------------------------------------------ */
+  function highlights(k){
+    const db=Store.get(), d=T.dow(k), out=[];
+    if(d===db.settings.weekResetDay)
+      out.push({ icon:"broom", title:"Freitags-Reset heute Abend", text:"10 Minuten alle gemeinsam — damit Freitag geputzt statt aufgeräumt wird." });
+    const coach = db.chores.find(c=>c.id==="c_coach");
+    if(coach && choreStatus(coach,k).days<=2 && d<=4)
+      out.push({ icon:"sparkle", title:"U8-Rugby vorbereiten", text:"Freitag 16:30 leitet ihr das Training. Übungen und Material jetzt planen, nicht Freitagmittag." });
+    if(d===2)
+      out.push({ icon:"sportbag", title:"Hannah: Tanzsachen morgens einpacken", text:"Wenn sie nach der Betreuung direkt weiterzieht, muss die Tasche früh dabei sein." });
+    if(d===4)
+      out.push({ icon:"bike", title:"Hannah fährt früher los", text:"Reiten um 15:00, 15 Minuten Fahrrad — Betreuung schon um "+hannahLeave(k).time+" verlassen." });
+    const shop = db.chores.find(c=>c.id==="c_shop");
+    if(shop && choreStatus(shop,k).days<=0)
+      out.push({ icon:"box", title:"Wocheneinkauf ist dran", text:"Vorgeschlagener Slot: "+["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"][db.settings.shopping.day-1]+" ab "+db.settings.shopping.start+"." });
+    if(!db.settings.hannahHasKey)
+      out.push({ icon:"lock", title:"Hannah hat noch keinen Schlüssel", text:"Die Planung schickt sie nur nach Hause, wenn jemand da ist. Im Admin umstellbar, sobald der Schlüssel da ist." });
+    return out;
+  }
+
+  return { weekType, mondayOf, workBlocks, workSummary, isHome, henrySchool, eventsFor, rawEvents,
+           hannahLeave, drives, eveningPlan, choreStatus, choresDue, computeAssignments,
+           assignmentsFor, choresForPerson, basicsFor, media, openMissions, missionsOf,
+           dayStats, highlights, freeMinutes, travelLabel, firstEventTime };
+})();
+
+/* ==========================================================================
+   6) ACTIONS — bauen Aktionen und geben sie an den Store.
+      Kein direkter Zugriff auf den Datenstand mehr: alles läuft über Ops,
+      damit dieselbe Änderung auf jedem Gerät identisch nachvollzogen wird.
+   ========================================================================== */
+const Actions = (function(){
+  const D = p => Store.dispatch(p);
+  const fmt = k => T.dayShort(k)+", "+T.parse(k).getDate()+"."+(T.parse(k).getMonth()+1)+".";
+
+  function ensureDay(k){
+    const day = Store.dayRead(k);
+    const due = Engine.choresDue(k);
+    const missing = due.some(c=> !day.assign || !day.assign[c.id]);
+    if(!missing) return;
+    D({ kind:"assign.set", date:k, map: Engine.computeAssignments(k) });
+  }
+
+  function toggleBasic(id, k){
+    const value = !Store.dayRead(k).basics[id];
+    D({ kind:"basic.set", id, date:k, value });
+    const b = Store.get().basics.find(x=>x.id===id);
+    if(b && value){
+      const m = Engine.media(b.person,k);
+      if(b.unlocksMedia && m.unlocked) UI.toast("Medienzeit freigeschaltet für "+P(b.person).name+".", "gold");
+    }
+  }
+
+  function toggleChore(id, k){
+    const value = !Store.dayRead(k).chores[id];
+    const who = (Store.dayRead(k).assign||{})[id] || Engine.assignmentsFor(k)[id];
+    D({ kind:"chore.set", id, date:k, value, who });
+    if(value){
+      const c = Store.get().chores.find(x=>x.id===id);
+      if(c) UI.toast(c.title+" erledigt — wieder fällig am "+fmt(Engine.choreStatus(c,k).next)+".");
+    }
+  }
+
+  function claimMission(id, pid){
+    D({ kind:"mission.claim", id, by:pid, date:T.key(new Date()) });
+    UI.toast("Übernommen. Liegt jetzt offen in deinem Plan — Haken setzt du erst, wenn sie fertig ist.");
+  }
+  function returnMission(id){
+    D({ kind:"mission.return", id });
+    UI.toast("Zurückgegeben. Sie steht wieder in der Jobbörse.");
+  }
+  function completeMission(id, k, ev){
+    const m0 = Store.get().missions.find(x=>x.id===id);
+    if(!m0 || m0.status!=="claimed") return;
+    D({ kind:"mission.done", id, date:k });
+    UI.coinFly(ev, m0.coins);
+    UI.toast("+"+m0.coins+" Coins für "+P(m0.by).name+".", "gold");
+    UI.celebrate();
+  }
+  function undoMission(id){ D({ kind:"mission.undo", id }); }
+
+  function redeem(rid, pid, ev){
+    const db = Store.get(), r = db.rewards.find(x=>x.id===rid);
+    if(!r || (db.state.coins[pid]||0) < r.cost){ UI.toast("Dafür fehlen noch Coins."); return; }
+    D({ kind:"reward.redeem", rid, pid, rdId:uid("rd"), date:T.key(new Date()) });
+    UI.toast(r.title+" eingelöst — "+r.cost+" Coins abgezogen.", "gold");
+    UI.celebrate();
+  }
+  function markRedemptionUsed(id){
+    const r = Store.get().state.redemptions.find(x=>x.id===id);
+    D({ kind:"redemption.used", id, value: r? !r.used : true });
+  }
+
+  function logMedia(pid, minutes, k){
+    const m = Engine.media(pid,k);
+    if(!m.unlocked){ UI.toast("Erst die Basics erledigen, dann geht's los."); return; }
+    const use = Math.min(minutes, m.remaining);
+    if(use<=0){ UI.toast("Für heute ist das Budget aufgebraucht."); return; }
+    D({ kind:"media.add", pid, date:k, min:use, at:T.hhmm(T.nowMin()), entryId:uid("me") });
+    const after = Engine.media(pid,k);
+    UI.toast(use+" Minuten eingetragen — "+after.remaining+" Minuten bleiben für später.");
+  }
+  function undoMedia(pid, entryId, k){ D({ kind:"media.remove", pid, date:k, entryId:String(entryId) }); }
+
+  function swapEvening(k){
+    D({ kind:"evening.swap", date:k, value: !Store.dayRead(k).eveningSwap });
+    UI.toast("Abendplanung getauscht.");
+  }
+
+  /* ---- Admin ---- */
+  function upsert(coll, obj){ D({ kind:"coll.upsert", coll, obj }); }
+  function remove(coll, id){ D({ kind:"coll.remove", coll, id }); }
+  function patchPerson(id, patch){ D({ kind:"coll.upsert", coll:"people", obj: Object.assign({id}, patch) }); }
+  function patchSettings(patch){ D({ kind:"settings.patch", patch }); }
+  function patchMeta(patch){ D({ kind:"meta.patch", patch }); }
+  function patchChoreDate(id, dateKey){ D({ kind:"coll.upsert", coll:"chores", obj:{ id, lastDone:dateKey } }); }
+  function setCoins(pid, n){ D({ kind:"coins.set", pid, n }); }
+
+  return { ensureDay, toggleBasic, toggleChore, claimMission, returnMission, completeMission, undoMission,
+           redeem, markRedemptionUsed, logMedia, undoMedia, swapEvening,
+           upsert, remove, patchPerson, patchSettings, patchMeta, patchChoreDate, setCoins };
+})();
+
+/* ==========================================================================
+   7) SYNC — gemeinsamer Familienstand über Supabase (reines REST, kein SDK).
+      Übertragen werden nur Aktionen, nie der ganze Datenstand. Deshalb
+      überschreibt niemand die Eingabe eines anderen.
+   ========================================================================== */
+const Sync = (function(){
+  const CKEY = "nestwerk.sync.config";
+  let cfg = null, timer = null, busy = false, nudged = false;
+  let status = "off", detail = "";                 /* off | ok | busy | error */
+
+  function loadCfg(){
+    try{ cfg = JSON.parse(localStorage.getItem(CKEY)) || null; }catch(e){ cfg = null; }
+    if(cfg && !cfg.device){ cfg.device = uid("dev"); saveCfg(); }
+    return cfg;
+  }
+  function saveCfg(){ if(cfg) localStorage.setItem(CKEY, JSON.stringify(cfg)); else localStorage.removeItem(CKEY); }
+  function config(){ return cfg; }
+  function configured(){ return !!(cfg && cfg.url && cfg.key && cfg.family); }
+  function actorName(){ return (cfg && cfg.name) ? cfg.name : "lokal"; }
+  function state(){ return { status, detail, configured:configured(), pending:Store.pending().length, seq:Store.seq() }; }
+
+  const endpoint = ()=> String(cfg.url).replace(/\/+$/,"") + "/rest/v1/family_ops";
+  function headers(extra){
+    return Object.assign({ "apikey": cfg.key, "Authorization": "Bearer "+cfg.key, "Content-Type":"application/json" }, extra||{});
+  }
+  async function req(url, opts){
+    const res = await fetch(url, opts);
+    if(!res.ok){
+      let msg = res.status+" "+res.statusText;
+      try{ const j = await res.json(); if(j && j.message) msg = j.message; }catch(e){}
+      throw new Error(msg);
+    }
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  }
+  function setStatus(s, d){ status = s; detail = d||""; Store.notify(); }
+
+  /* --- hochladen --- */
+  async function push(){
+    const q = Store.pending();
+    if(!q.length) return;
+    const rows = q.map(op=>({ family: cfg.family, op_id: op.opId, kind: op.kind, actor: op.actor||"", payload: op }));
+    await req(endpoint()+"?on_conflict=op_id", {
+      method:"POST",
+      headers: headers({ "Prefer":"resolution=ignore-duplicates,return=minimal" }),
+      body: JSON.stringify(rows)
+    });
+    Store.clearPending(q.map(o=>o.opId));
+    Store.save();
+  }
+  /* --- herunterladen --- */
+  async function pull(){
+    const url = endpoint()+"?family=eq."+encodeURIComponent(cfg.family)
+              + "&seq=gt."+Store.seq()+"&select=seq,op_id,kind,payload&order=seq.asc&limit=800";
+    const rows = await req(url, { headers: headers() });
+    if(!rows.length) return 0;
+    let changed = 0;
+    rows.forEach(r=>{
+      if(r.kind === "bootstrap"){
+        if(r.seq > Store.bootSeq()){
+          Store.replaceDB(r.payload.db);
+          Store.setBootSeq(r.seq);
+          changed++;
+        }
+      }else if(Store.applyRemote(r.payload)) changed++;
+      Store.setSeq(r.seq);
+    });
+    Store.save();
+    if(changed) Store.notify();
+    return changed;
+  }
+  async function cycle(){
+    if(!configured() || busy) return;
+    busy = true; setStatus("busy");
+    try{ await push(); await pull(); setStatus("ok"); }
+    catch(e){ console.warn("Sync:", e); setStatus("error", e.message); }
+    finally{ busy = false; }
+  }
+  function nudge(){
+    if(!configured() || nudged) return;
+    nudged = true;
+    setTimeout(()=>{ nudged = false; cycle(); }, 400);       /* mehrere Klicks zusammenfassen */
+  }
+  function startTimer(){
+    if(timer) clearInterval(timer);
+    if(!configured()) return;
+    timer = setInterval(()=>{ if(document.visibilityState !== "hidden") cycle(); }, 6000);
+  }
+
+  /* --- Erstverbindung --- */
+  async function bootstrapRemote(){
+    const url = endpoint()+"?family=eq."+encodeURIComponent(cfg.family)
+              + "&kind=eq.bootstrap&select=seq,payload&order=seq.desc&limit=1";
+    const rows = await req(url, { headers: headers() });
+    return rows[0] || null;
+  }
+  async function publishSnapshot(){
+    const op = { opId: uid("boot"), ts: Date.now(), kind:"bootstrap", actor: actorName(), db: JSON.parse(Store.exportJSON()) };
+    await req(endpoint(), {
+      method:"POST",
+      headers: headers({ "Prefer":"return=representation" }),
+      body: JSON.stringify([{ family: cfg.family, op_id: op.opId, kind:"bootstrap", actor: op.actor, payload: op }])
+    }).then(rows=>{
+      const seq = rows && rows[0] ? rows[0].seq : 0;
+      Store.setBootSeq(seq); Store.setSeq(seq);
+    });
+    Store.clearPending(Store.pending().map(o=>o.opId));   /* im Schnappschuss bereits enthalten */
+    Store.save();
+  }
+  async function connect(next, onQuestion){
+    cfg = Object.assign({ device: uid("dev") }, next);
+    saveCfg();
+    setStatus("busy");
+    try{
+      const boot = await bootstrapRemote();
+      if(!boot){
+        await publishSnapshot();
+      }else if(boot.seq !== Store.bootSeq()){
+        const takeRemote = await onQuestion();
+        if(takeRemote){
+          Store.replaceDB(boot.payload.db);
+          Store.setBootSeq(boot.seq); Store.setSeq(boot.seq);
+          Store.clearPending(Store.pending().map(o=>o.opId));
+          Store.save();
+        }else{
+          await publishSnapshot();
+        }
+      }
+      await pull();
+      setStatus("ok");
+      startTimer();
+      return true;
+    }catch(e){
+      setStatus("error", e.message);
+      throw e;
+    }
+  }
+  function disconnect(){ cfg = null; saveCfg(); if(timer) clearInterval(timer); timer=null; setStatus("off"); }
+
+  function init(){
+    loadCfg();
+    if(configured()){ setStatus("busy"); cycle(); startTimer();
+      document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") cycle(); });
+    }
+  }
+  return { init, connect, disconnect, cycle, nudge, config, configured, actorName, state, publishSnapshot };
+})();
+
+
+/* ==========================================================================
+   6) UI — rendert ausschließlich aus Store + Engine
+   ========================================================================== */
+const UI = (function(){
+  const S = { tab:"today", person:"mama", date:T.key(new Date()), adminTab:"basics", jobKid:"henry", houseFilter:"all" };
+  const el = id => document.getElementById(id);
+
+  /* ---------- Mikro-Feedback ---------- */
+  function toast(msg, kind){
+    const w = el("toasts"); const t = document.createElement("div");
+    t.className = "toast"+(kind?" "+kind:""); t.textContent = msg; w.appendChild(t);
+    setTimeout(()=>{ t.style.transition="opacity .3s, transform .3s"; t.style.opacity="0"; t.style.transform="translateY(8px)"; setTimeout(()=>t.remove(),320); }, 2600);
+  }
+  const sized = (svg,px)=> svg.replace("<svg ", '<svg style="width:'+px+'px;height:'+px+'px" ');
+  function coinFly(ev, n){
+    const x = ev && ev.clientX ? ev.clientX : innerWidth/2, y = ev && ev.clientY ? ev.clientY : innerHeight/2;
+    for(let i=0;i<Math.min(6,Math.max(3,Math.round(n/4)));i++){
+      const s = document.createElement("span");
+      s.className="coin-fly"; s.style.left=(x-14+(Math.random()*44-22))+"px"; s.style.top=(y-14)+"px";
+      s.style.animationDelay=(i*60)+"ms"; s.style.width="28px"; s.style.height="28px";
+      s.innerHTML = sized(Art.illu("coin"),28);
+      document.body.appendChild(s); setTimeout(()=>s.remove(),1200);
+    }
+  }
+  function celebrate(){
+    const cx = innerWidth/2, cy = innerHeight/2;
+    for(let i=0;i<9;i++){
+      const s=document.createElement("span");
+      s.className="coin-fly"; s.style.left=(cx-16+(Math.random()*220-110))+"px"; s.style.top=(cy+(Math.random()*80-40))+"px";
+      s.style.animationDelay=(i*45)+"ms"; s.innerHTML = sized(Art.illu(i%2?"star":"sparkle"),26);
+      document.body.appendChild(s); setTimeout(()=>s.remove(),1300);
+    }
+  }
+  function modal(title, body, footer){
+    const root = el("modalRoot");
+    root.innerHTML = '<div class="modal-bg" data-a="closeModal"><div class="modal" data-stop="1">'
+      + '<div class="row" style="margin-bottom:8px"><h2 style="flex:1">'+esc(title)+'</h2>'
+      + '<button class="icon-btn" data-a="closeModal" aria-label="Schließen">'+Art.icon("close")+'</button></div>'
+      + body + (footer? '<div class="row" style="gap:10px;margin-top:18px">'+footer+'</div>' : '') + '</div></div>';
+  }
+  function closeModal(){ el("modalRoot").innerHTML=""; }
+
+  /* ---------- Bausteine ---------- */
+  function personPill(pid){
+    return '<span class="pill-person" style="background:'+P(pid).soft+'">'+Art.avatar(pid)+esc(P(pid).name)+'</span>';
+  }
+  function taskRow(o){
+    return '<div class="task'+(o.done?" done":"")+'" data-a="'+o.action+'" data-id="'+o.id+'" role="button" tabindex="0" aria-pressed="'+(!!o.done)+'">'
+      + '<span class="check">'+Art.checkPath+'</span>'
+      + (o.icon? '<span class="t-ico">'+Art.illu(o.icon)+'</span>' : '')
+      + '<span class="t-body"><span class="t-title">'+esc(o.title)+'</span>'
+      + (o.sub? '<span class="t-sub">'+esc(o.sub)+'</span>':'') + '</span>'
+      + (o.right||'') + '</div>';
+  }
+  function bar(pct, cls){ return '<div class="bar '+(cls||"")+'"><i style="width:'+clamp(pct,0,100)+'%"></i></div>'; }
+  function empty(txt, ico){ return '<div class="empty">'+Art.illu(ico||"sparkle")+'<div>'+esc(txt)+'</div></div>'; }
+
+  const EV_COLOR = { school:["#EAF0F5","#5E7B9E"], care:["#F1F0EA","#9A9078"], hobby:["#EAF3EE","#4C8579"],
+                     sport:["#F6EAF0","#B04C77"], work:["#EFEFF3","#6B6E86"], travel:["#F3F5F3","#8A9690"],
+                     family:["#FAF1E2","#B5822A"], logistics:["#EDF2F6","#4C7BA0"] };
+
+  /* ---------- Signature: Familien-Tagesband ---------- */
+  function band(k){
+    const A=6*60, B=21*60, span=B-A;
+    let hours=""; for(let h=6;h<21;h++) hours += '<span>'+String(h).padStart(2,"0")+'</span>';
+    const lanes = Store.get().people.map(p=>{
+      const evs = Engine.eventsFor(p.id,k).filter(e=> T.min(e.end)>A && T.min(e.start)<B);
+      const rows=[];
+      evs.forEach(e=>{
+        const s=T.min(e.start), en=Math.max(T.min(e.end), s+25);
+        let r=0; while(rows[r] && rows[r] > s) r++;
+        rows[r]=en; e._row=r;
+      });
+      const h = 16 + Math.max(1,rows.length)*50;
+      const body = evs.map(e=>{
+        const s=clamp(T.min(e.start),A,B), en=clamp(Math.max(T.min(e.end),T.min(e.start)+25),A,B);
+        const c = EV_COLOR[e.kind]||EV_COLOR.family;
+        const isTravel = e.kind==="travel";
+        return '<div class="ev'+(isTravel?" travel":"")+'" title="'+esc(e.title+" "+e.start+"–"+e.end)+'" style="left:'+((s-A)/span*100)+'%;width:'+Math.max(2.2,(en-s)/span*100)+'%;top:'+(9+e._row*50)+'px;--ev-bg:'+c[0]+';--ev-c:'+c[1]+'">'
+          + '<b>'+esc(e.title)+'</b>'+(isTravel?"":'<span>'+e.start+'–'+e.end+'</span>')+'</div>';
+      }).join("");
+      let grid=""; for(let i=0;i<15;i++) grid+="<i></i>";
+      return '<div class="lane" style="min-height:'+h+'px">'
+        + '<div class="lane-head">'+Art.avatar(p.id)+'<b>'+esc(p.name)+'</b></div>'
+        + '<div class="lane-track"><div class="lane-grid">'+grid+'</div>'+body+'</div></div>';
+    }).join("");
+    const nowPct = (T.key(new Date())===k) ? (clamp(T.nowMin(),A,B)-A)/span*100 : null;
+    const now = nowPct==null ? "" : '<div class="now-line" style="left:calc(96px + (100% - 96px) * '+(nowPct/100)+')"></div>';
+    return '<div class="band"><div class="band-scroll"><div class="band-inner">'
+      + '<div class="band-hours">'+hours+'</div>'+ lanes + now +'</div></div></div>';
+  }
+
+  /* ==========================  HEUTE  ========================== */
+  function viewToday(){
+    const k = S.date, db = Store.get(), day = Store.dayRead(k);
+    const ev = Engine.eveningPlan(k);
+    const wt = Engine.weekType(k);
+
+    /* Abendkarte */
+    const evening = '<div class="card" style="--acc:'+pcol(ev.bedtime)+'">'
+      + '<div class="row"><span class="eyebrow">Der Abend ist geregelt</span><span class="spacer"></span>'
+      + '<button class="btn ghost sm" data-a="swapEvening">'+Art.icon("refresh")+' Tauschen</button></div>'
+      + '<div class="grid" style="grid-template-columns:1fr;gap:12px;margin-top:12px">'
+      + '<div class="row" style="gap:14px"><div style="width:52px;flex:none">'+Art.avatar(ev.bedtime)+'</div>'
+      + '<div style="flex:1"><h3>'+esc(P(ev.bedtime).name)+' bringt Emma ins Bett</h3>'
+      + '<p class="small muted">ab '+ev.bedTime+' · '+esc(ev.reason)+'</p></div></div>'
+      + '<div class="row" style="gap:14px"><div style="width:52px;flex:none">'+Art.avatar(ev.kitchen)+'</div>'
+      + '<div style="flex:1"><h3>'+esc(P(ev.kitchen).name)+' macht den Küchenabschluss</h3>'
+      + '<p class="small muted">ab '+ev.kitchenTime+' · '+esc(ev.kitchenReason)+'</p></div></div>'
+      + (ev.both? '<div class="locked-note"><span style="width:22px;flex:none;color:var(--warn)">'+Art.icon("warn")+'</span><div class="small">Heute übernimmt eine Person beides. Morgen gleicht die Planung das wieder aus.</div></div>':'')
+      + '</div></div>';
+
+    /* Personen-Überblick */
+    const cards = db.people.map(p=>{
+      const st = Engine.dayStats(p.id,k);
+      const m = p.role==="child" ? Engine.media(p.id,k) : null;
+      const next = Engine.eventsFor(p.id,k).find(e=> T.min(e.end) > T.nowMin() && e.kind!=="travel");
+      const pct = st.total? Math.round(st.done/st.total*100) : 100;
+      return '<div class="card accent" role="button" tabindex="0" style="--acc:'+pcol(p.id)+';text-align:left;width:100%;cursor:pointer" data-a="openPerson" data-id="'+p.id+'">'
+        + '<div class="row"><div style="width:44px;flex:none">'+Art.avatar(p.id)+'</div>'
+        + '<div style="flex:1;min-width:0"><h3>'+esc(p.name)+'</h3>'
+        + '<p class="xs muted">'+(st.open? st.open+" offen · "+st.done+"/"+st.total+" erledigt" : (st.total? "alles erledigt":"nichts geplant"))+'</p></div>'
+        + (p.role==="child"? '<span class="coin-badge" style="padding:4px 10px 4px 4px;font-size:13px">'+Art.illu("coin")+(db.state.coins[p.id]||0)+'</span>':'')
+        + '</div>'
+        + '<div style="margin-top:10px">'+bar(pct)+'</div>'
+        + (next? '<p class="xs muted" style="margin-top:8px">Als Nächstes · '+next.start+' '+esc(next.title)+'</p>':'')
+        + (m? '<p class="xs muted" style="margin-top:4px">Medien: '+m.used+'/'+m.budget+' Min'+(m.unlocked?"":" · noch gesperrt")+'</p>':'')
+        + '</div>';
+    }).join("");
+
+    /* Haushalt heute */
+    const assign = Engine.assignmentsFor(k);
+    const due = Engine.choresDue(k);
+    const houseList = due.length ? due.map(c=>{
+      const who = assign[c.id];
+      const st = Engine.choreStatus(c,k);
+      return taskRow({ id:c.id, action:"toggleChore", done:!!day.chores[c.id], title:c.title,
+        sub:(who==="*"? "alle gemeinsam" : P(who).name+" · "+c.room)+(st.days<0? " · "+(-st.days)+" Tage überfällig":""),
+        right: who==="*" ? '<span class="chip">Familie</span>' : '<span class="pill-person" style="background:'+P(who).soft+'">'+Art.avatar(who)+'</span>' });
+    }).join("") : empty("Heute ist im Haushalt nichts fällig.","broom");
+
+    /* Missionen im Umlauf */
+    const claimed = db.missions.filter(m=>m.status==="claimed");
+    const doneM = db.missions.filter(m=>m.status==="done" && m.doneAt===k);
+    const missionBox = (claimed.length||doneM.length) ?
+      claimed.map(m=>'<div class="task"><span class="t-ico">'+Art.illu(m.icon)+'</span><span class="t-body"><span class="t-title">'+esc(m.title)+'</span><span class="t-sub">übernommen von '+esc(P(m.by).name)+' · noch offen</span></span><span class="chip gold">'+m.coins+'</span></div>').join("")
+      + doneM.map(m=>'<div class="task done"><span class="check">'+Art.checkPath+'</span><span class="t-body"><span class="t-title">'+esc(m.title)+'</span><span class="t-sub">'+esc(P(m.by).name)+' · '+m.coins+' Coins gutgeschrieben</span></span></div>').join("")
+      : empty("Aktuell hat niemand eine Extra-Mission übernommen.","sparkle");
+
+    /* Medienzeit kompakt */
+    const mediaBox = db.people.filter(p=>p.role==="child").map(p=>{
+      const m = Engine.media(p.id,k);
+      return '<div style="margin-bottom:14px"><div class="row" style="gap:8px"><b class="small">'+esc(p.name)+'</b><span class="spacer"></span>'
+        + '<span class="xs '+(m.unlocked?"muted":"")+'" '+(m.unlocked?"":'style="color:var(--warn)"')+'>'+(m.unlocked? m.used+" / "+m.budget+" Min" : "gesperrt — "+m.open.length+" Basics offen")+'</span></div>'
+        + '<div style="margin-top:6px">'+bar(m.budget? m.used/m.budget*100:0, "gold")+'</div></div>';
+    }).join("");
+
+    const hl = Engine.highlights(k);
+    const hlBox = hl.map(h=>'<div class="row" style="align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2)">'
+      + '<span style="width:34px;flex:none">'+Art.illu(h.icon)+'</span>'
+      + '<div><b class="small">'+esc(h.title)+'</b><p class="xs muted">'+esc(h.text)+'</p></div></div>').join("");
+
+    return '<div class="stack lg" style="padding-top:18px">'
+      + '<div><span class="eyebrow">Familienübersicht</span><h1 style="margin-top:4px">'+T.dayName(k)+', '+T.long(k)+'</h1>'
+      + '<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">'
+      + '<span class="chip brand">Schulwoche '+wt+'</span>'
+      + '<span class="chip">'+Engine.choresDue(k).length+' Haushaltsaufgaben fällig</span>'
+      + '<span class="chip">'+Engine.openMissions().length+' freie Extra-Missionen</span>'
+      + dateNav() + '</div></div>'
+
+      + '<div class="two-col"><div class="stack">'
+      + evening
+      + '<div><div class="section-h"><h2>Tagesband</h2><span class="hint">alle Termine, eine Zeitachse</span></div>'+band(k)+'</div>'
+      + '<div><div class="section-h"><h2>Haushalt heute</h2><span class="hint">automatisch verteilt</span></div><div class="card">'+houseList+'</div></div>'
+      + '<div><div class="section-h"><h2>Extra-Missionen im Umlauf</h2></div><div class="card">'+missionBox+'</div></div>'
+      + '</div><div class="stack">'
+      + '<div><div class="section-h"><h2>Wer steht wo?</h2></div><div class="stack" style="gap:12px">'+cards+'</div></div>'
+      + '<div><div class="section-h"><h2>Medienzeit heute</h2></div><div class="card">'+mediaBox+'</div></div>'
+      + (hl.length? '<div><div class="section-h"><h2>Worauf es heute ankommt</h2></div><div class="card">'+hlBox+'</div></div>':'')
+      + '</div></div></div>';
+  }
+  function dateNav(){
+    return '<span class="spacer"></span>'
+      + '<button class="icon-btn" data-a="dateShift" data-n="-1" aria-label="Tag zurück">'+Art.icon("back")+'</button>'
+      + (S.date!==T.key(new Date())? '<button class="btn ghost sm" data-a="dateToday">Heute</button>':'')
+      + '<button class="icon-btn" data-a="dateShift" data-n="1" aria-label="Tag vor">'+Art.icon("fwd")+'</button>';
+  }
+
+  /* ==========================  ICH / DASHBOARDS  ========================== */
+  function whoBar(){
+    return '<div class="who">'+ Store.get().people.map(p=>
+      '<button data-a="setPerson" data-id="'+p.id+'" aria-pressed="'+(S.person===p.id)+'" style="--acc:'+pcol(p.id)+';--acc-soft:'+p.soft+'">'
+      + Art.avatar(p.id)+'<b>'+esc(p.name)+'</b></button>').join("") + '</div>';
+  }
+  function heroPerson(pid, subtitle, extra){
+    const p = P(pid);
+    return '<div class="hero-person" style="--acc-soft:'+p.soft+'">'
+      + '<div class="row" style="align-items:flex-start;gap:14px">'
+      + '<div class="figs"><span class="avatar">'+Art.avatar(pid)+'</span><span class="comp">'+Art.companion(p.companion)+'</span></div>'
+      + '<div style="flex:1;min-width:0;padding-top:6px"><span class="eyebrow">'+T.dayName(S.date)+'</span>'
+      + '<h1 style="margin-top:2px">'+esc(p.name)+'</h1>'
+      + '<p class="small muted">'+subtitle+'</p></div></div>'
+      + (extra||'') + '</div>';
+  }
+  function scheduleList(pid){
+    const k=S.date, evs = Engine.eventsFor(pid,k);
+    if(!evs.length) return empty("Heute steht nichts im Kalender.","star");
+    return evs.map(e=>{
+      const c = EV_COLOR[e.kind]||EV_COLOR.family;
+      const sub = e.subjects ? e.subjects.map(s=>s.subject).join(" · ") : (e.note||"");
+      return '<div class="row" style="align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2)">'
+        + '<div style="width:52px;flex:none"><b class="small">'+e.start+'</b><div class="xs muted">'+e.end+'</div></div>'
+        + '<div style="width:4px;align-self:stretch;border-radius:3px;background:'+c[1]+';flex:none"></div>'
+        + '<div style="flex:1;min-width:0"><b class="small">'+esc(e.title)+'</b>'
+        + (sub? '<p class="xs muted">'+esc(sub)+'</p>':'')+'</div></div>';
+    }).join("");
+  }
+  function mediaCard(pid){
+    const k=S.date, m = Engine.media(pid,k), p=P(pid);
+    const gate = !m.unlocked;
+    const chips = [10,15,20,30].map(n=>'<button class="btn '+(gate?"ghost":"soft")+' sm" data-a="logMedia" data-id="'+pid+'" data-n="'+n+'" '+(gate||m.remaining<=0?"disabled":"")+'>+'+n+' Min</button>').join("");
+    const list = m.entries.length ? '<div class="stack" style="gap:6px;margin-top:12px">'+m.entries.map((e,i)=>
+        '<div class="row xs muted"><span>'+e.at+' Uhr · '+e.min+' Minuten</span><span class="spacer"></span><button class="btn ghost sm" data-a="undoMedia" data-id="'+pid+'" data-n="'+i+'">rückgängig</button></div>').join("")+'</div>' : '';
+    return '<div class="card'+(m.unlocked?" unlock-burst":"")+'">'
+      + '<div class="row" style="margin-bottom:12px"><span class="eyebrow">Medienzeit</span><span class="spacer"></span>'
+      + '<span class="chip '+(gate?"warn":"ok")+'">'+(gate?"gesperrt":"frei")+'</span></div>'
+      + '<div class="media-visual"><span class="device">'+Art.illu(p.id==="henry"?"tv":"tablet")+'</span>'
+      + '<div class="mv-body">'
+      + '<div class="row" style="align-items:baseline;gap:6px"><b style="font-family:var(--font-display);font-size:26px">'+m.remaining+'</b><span class="small muted">von '+m.budget+' Minuten übrig</span></div>'
+      + '<div style="margin-top:8px">'+bar(m.budget? m.used/m.budget*100:0,"gold thick")+'</div>'
+      + '<p class="xs muted" style="margin-top:6px">'+m.used+' Minuten genutzt · '+m.remaining+' für später aufgehoben</p>'
+      + '</div></div>'
+      + (gate? '<div class="locked-note" style="margin-top:14px"><span style="width:22px;flex:none;color:var(--warn)">'+Art.icon("lock")+'</span>'
+              + '<div class="small">Noch offen: '+m.open.map(b=>esc(b.title)).join(", ")+'</div></div>'
+              : '<div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap">'+chips+'</div>')
+      + list + '</div>';
+  }
+
+  /* ---- Kind (Henry / Hannah) ---- */
+  function dashKid(pid){
+    const k=S.date, db=Store.get(), day=Store.dayRead(k), p=P(pid);
+    const st = Engine.dayStats(pid,k);
+    const basics = st.basics.map(b=> taskRow({ id:b.id, action:"toggleBasic", done:!!day.basics[b.id], title:b.title, icon:b.icon,
+      right: b.unlocksMedia? '<span class="chip gold" title="Schaltet Medienzeit frei">'+Art.icon("unlock")+'</span>':'' })).join("") || empty("Heute keine Basics.","star");
+    const chores = st.chores.length? st.chores.map(c=> taskRow({ id:c.id, action:"toggleChore", done:!!day.chores[c.id], title:c.title, sub:c.room, icon:"broom" })).join("")
+                                   : empty("Heute keine Haushaltsaufgabe für dich.","broom");
+    const mine = Engine.missionsOf(pid);
+    const missions = mine.length? mine.map(m=>{
+      if(m.status==="claimed") return '<div class="task" data-a="completeMission" data-id="'+m.id+'" role="button" tabindex="0">'
+        + '<span class="check">'+Art.checkPath+'</span><span class="t-ico">'+Art.illu(m.icon)+'</span>'
+        + '<span class="t-body"><span class="t-title">'+esc(m.title)+'</span><span class="t-sub">offen · '+m.coins+' Coins bei Erledigung</span></span>'
+        + '<button class="btn ghost sm" data-a="returnMission" data-id="'+m.id+'" data-stopclick="1">Zurückgeben</button></div>';
+      return '<div class="task done"><span class="check">'+Art.checkPath+'</span><span class="t-body"><span class="t-title">'+esc(m.title)+'</span><span class="t-sub">erledigt · +'+m.coins+' Coins</span></span></div>';
+    }).join("") : empty("Noch keine Mission übernommen. Schau in die Jobbörse.","sparkle");
+
+    const redeemed = db.state.redemptions.filter(r=>r.person===pid).slice(0,4);
+    const rew = redeemed.length? redeemed.map(r=>'<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line-2)"><span style="width:30px;flex:none">'+Art.illu(Store.get().rewards.find(x=>x.id===r.reward)?.icon||"star")+'</span><div style="flex:1"><b class="small">'+esc(r.title)+'</b><div class="xs muted">'+r.date+(r.used?" · eingelöst":"")+'</div></div><button class="btn ghost sm" data-a="useRedemption" data-id="'+r.id+'">'+(r.used?"zurück":"benutzt")+'</button></div>').join("")
+      : '<p class="small muted">Noch nichts eingelöst. Im Bereich Jobs findest du den Belohnungs-Shop.</p>';
+
+    const pct = st.total? Math.round(st.done/st.total*100):100;
+    let hint = '';
+    if(pid==="hannah"){
+      const lv = Engine.hannahLeave(k);
+      hint = '<div class="card accent" style="--acc:'+pcol(pid)+'"><div class="row" style="align-items:flex-start;gap:12px">'
+        + '<span style="width:36px;flex:none">'+Art.illu("bike")+'</span>'
+        + '<div><b class="small">Betreuung verlassen um '+lv.time+'</b><p class="xs muted">'+esc(lv.reason)+'</p></div></div></div>';
+    }
+
+    return '<div class="stack lg" style="padding-top:14px">'
+      + whoBar()
+      + heroPerson(pid, st.open? st.open+" Sachen warten noch auf dich — "+st.done+" hast du schon."
+                              : "Alles erledigt. Stark.",
+          '<div style="margin-top:16px">'+bar(pct)+'</div>'
+        + '<div class="row" style="margin-top:14px;gap:10px;flex-wrap:wrap">'
+        + '<span class="coin-badge">'+Art.illu("coin")+(db.state.coins[pid]||0)+' Coins</span>'
+        + '<span class="chip">'+esc(Art.companionName(p.companion))+' ist dabei</span></div>')
+      + hint
+      + '<div class="two-col"><div class="stack">'
+      + '<div><div class="section-h"><h2>Dein Tag</h2></div><div class="card">'+scheduleList(pid)+'</div></div>'
+      + '<div><div class="section-h"><h2>Daily Basics</h2><span class="hint">antippen zum Abhaken</span></div><div class="card">'+basics+'</div></div>'
+      + '<div><div class="section-h"><h2>Haushalt</h2></div><div class="card">'+chores+'</div></div>'
+      + '</div><div class="stack">'
+      + mediaCard(pid)
+      + '<div><div class="section-h"><h2>Deine Missionen</h2></div><div class="card">'+missions+'</div></div>'
+      + '<div><div class="section-h"><h2>Deine Belohnungen</h2></div><div class="card">'+rew+'</div></div>'
+      + '</div></div></div>';
+  }
+
+  /* ---- Emma (3 Jahre, kein Text nötig) ---- */
+  function dashEmma(){
+    const k=S.date, pid="emma", day=Store.dayRead(k), db=Store.get();
+    const basics = Engine.basicsFor(pid,k);
+    const cards = basics.map(b=>
+      '<button class="emma-card'+(day.basics[b.id]?" done":"")+'" data-a="toggleBasic" data-id="'+b.id+'" aria-pressed="'+(!!day.basics[b.id])+'" aria-label="'+esc(b.title)+'">'
+      + '<span class="tick">'+Art.checkPath+'</span>'
+      + Art.illu(b.icon,"illu")
+      + '<span class="lbl">'+esc(b.short || b.title.split(" ")[0])+'</span></button>').join("");
+    const m = Engine.media(pid,k);
+    const doneN = basics.filter(b=>day.basics[b.id]).length;
+    const plan = Engine.eventsFor(pid,k).filter(e=>e.kind!=="travel").map(e=>
+      '<div class="row" style="gap:14px;padding:10px 0"><span style="width:52px;flex:none">'+Art.illu(e.kind==="hobby"?"star":e.kind==="logistics"?"car":"box")+'</span>'
+      + '<div><b style="font-family:var(--font-display);font-size:18px">'+esc(e.title)+'</b><div class="small muted">'+e.start+'</div></div></div>').join("");
+
+    return '<div class="stack lg" style="padding-top:14px">'
+      + whoBar()
+      + '<div class="hero-person" style="--acc-soft:'+P("emma").soft+'">'
+      + '<div class="row" style="gap:10px"><span class="avatar" style="width:104px;height:104px">'+Art.avatar("emma")+'</span>'
+      + '<span class="comp" style="width:74px;height:74px">'+Art.companion("piko")+'</span>'
+      + '<div style="flex:1"><h1 style="font-size:30px">Hallo Emma!</h1>'
+      + '<div class="row" style="gap:6px;margin-top:8px">'+ basics.map((b,i)=>'<span style="width:20px;height:20px;display:inline-block">'+(day.basics[b.id]?Art.illu("star"):'<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="34" fill="#E4E9E4"/></svg>')+'</span>').join("") +'</div>'
+      + '<p class="small muted" style="margin-top:6px">'+doneN+' von '+basics.length+' geschafft</p></div></div></div>'
+
+      + '<div class="emma-grid">'+cards+'</div>'
+
+      + '<div class="card">'
+      + '<div class="media-visual"><span class="device" style="width:96px;height:96px">'+Art.illu("tablet")+'</span>'
+      + '<div class="mv-body">'
+      + '<div class="row" style="gap:6px;align-items:baseline"><b style="font-family:var(--font-display);font-size:34px">'+m.remaining+'</b><span class="muted">Minuten</span></div>'
+      + '<div style="margin-top:10px">'+bar(m.budget? m.used/m.budget*100:0,"gold thick")+'</div>'
+      + (m.unlocked? '<div class="row" style="gap:8px;margin-top:14px">'
+            + [15,30].map(n=>'<button class="btn soft" data-a="logMedia" data-id="emma" data-n="'+n+'" '+(m.remaining<=0?"disabled":"")+'>'+n+' Min</button>').join("")+'</div>'
+          : '<div class="row" style="gap:8px;margin-top:12px"><span style="width:26px;color:var(--warn)">'+Art.icon("lock")+'</span><span class="small muted">Erst die Bilder oben antippen.</span></div>')
+      + '</div></div></div>'
+
+      + '<div class="card"><div class="row" style="margin-bottom:6px"><span class="eyebrow">Dein Tag</span></div>'+plan+'</div>'
+      + '<div class="card"><div class="row"><span class="coin-badge" style="font-size:19px">'+Art.illu("coin")+(db.state.coins.emma||0)+'</span>'
+      + '<span class="small muted" style="margin-left:12px">Sterne zum Aussuchen</span></div></div>'
+      + '</div>';
+  }
+
+  /* ---- Eltern ---- */
+  function dashAdult(pid){
+    const k=S.date, db=Store.get(), day=Store.dayRead(k);
+    const w = Engine.workSummary(pid,k), blocks = Engine.workBlocks(pid,k);
+    const st = Engine.dayStats(pid,k);
+    const ev = Engine.eveningPlan(k);
+    const chores = st.chores.length? st.chores.map(c=> taskRow({ id:c.id, action:"toggleChore", done:!!day.chores[c.id], title:c.title, sub:c.room+" · alle "+c.interval+" Tage", icon:"broom" })).join("")
+                                   : empty("Heute nichts aus dem Haushalt zugeteilt.","broom");
+    const dr = Engine.drives(k).filter(d=>d.driver===pid);
+    const driveBox = dr.length? dr.map(d=>'<div class="row" style="padding:10px 0;border-bottom:1px solid var(--line-2)"><span style="width:34px;flex:none">'+Art.illu("car")+'</span><div style="flex:1"><b class="small">'+esc(d.who+" → "+d.title)+'</b><div class="xs muted">losfahren '+d.leave+' · Beginn '+d.start+'</div></div></div>').join("")
+      : '<p class="small muted">Heute keine Fahrdienste.</p>';
+    const workBox = blocks.length? blocks.filter(b=>b.kind==="work").map(b=>'<div class="row" style="padding:9px 0"><b class="small" style="width:110px">'+b.start+'–'+b.end+'</b><span class="small muted">'+esc(b.title)+'</span></div>').join("")
+      : '<p class="small muted">Heute arbeitsfrei.</p>';
+    const kidStatus = db.people.filter(p=>p.role==="child").map(p=>{
+      const s = Engine.dayStats(p.id,k), m = Engine.media(p.id,k);
+      return '<div class="row" style="padding:10px 0;border-bottom:1px solid var(--line-2)"><span style="width:34px;flex:none">'+Art.avatar(p.id)+'</span>'
+        + '<div style="flex:1"><b class="small">'+esc(p.name)+'</b><div class="xs muted">'+s.done+'/'+s.total+' erledigt · '+m.used+'/'+m.budget+' Min Medien</div></div>'
+        + '<span class="chip gold">'+(db.state.coins[p.id]||0)+'</span></div>';
+    }).join("");
+
+    return '<div class="stack lg" style="padding-top:14px">'
+      + whoBar()
+      + heroPerson(pid, (w? w.label:"")+" · "+st.open+" offene Aufgaben heute",
+          '<div class="row" style="margin-top:14px;gap:10px;flex-wrap:wrap">'
+          + '<span class="chip brand">'+(ev.bedtime===pid? "Emma ins Bett "+ev.bedTime : ev.kitchen===pid? "Küchenabschluss "+ev.kitchenTime : "abends frei")+'</span>'
+          + '<span class="chip">Keine Coins — Coins sind Kindersache</span></div>')
+      + '<div class="two-col"><div class="stack">'
+      + '<div><div class="section-h"><h2>Dein Tag</h2></div><div class="card">'+scheduleList(pid)+'</div></div>'
+      + '<div><div class="section-h"><h2>Haushalt heute</h2><span class="hint">automatisch zugeteilt</span></div><div class="card">'+chores+'</div></div>'
+      + '<div><div class="section-h"><h2>Fahrdienste</h2></div><div class="card">'+driveBox+'</div></div>'
+      + '</div><div class="stack">'
+      + '<div><div class="section-h"><h2>Arbeit</h2></div><div class="card">'+workBox+'</div></div>'
+      + '<div><div class="section-h"><h2>Kinder im Blick</h2></div><div class="card">'+kidStatus+'</div></div>'
+      + '<div class="card"><span class="eyebrow">Abend</span><p class="small" style="margin-top:8px">'+esc(ev.reason)+'</p>'
+      + '<p class="small muted" style="margin-top:6px">'+esc(ev.kitchenReason)+'</p>'
+      + '<button class="btn ghost sm" data-a="swapEvening" style="margin-top:12px">'+Art.icon("refresh")+' Tauschen</button></div>'
+      + '</div></div></div>';
+  }
+  function viewMe(){
+    const p = P(S.person);
+    if(p.mode==="emma") return dashEmma();
+    if(p.role==="child") return dashKid(p.id);
+    return dashAdult(p.id);
+  }
+
+  /* ==========================  JOBS  ========================== */
+  function viewJobs(){
+    const db=Store.get(), kid=S.jobKid, coins=db.state.coins[kid]||0, age=P(kid).age;
+    const kidTabs = '<div class="tabs">'+db.people.filter(p=>p.role==="child").map(p=>
+      '<button data-a="setJobKid" data-id="'+p.id+'" aria-pressed="'+(kid===p.id)+'">'+esc(p.name)+'</button>').join("")+'</div>';
+
+    const open = Engine.openMissions();
+    const forKid = open.filter(m=> age >= m.minAge);
+    const tooOld = open.filter(m=> age < m.minAge);
+    const board = forKid.length? forKid.map(m=>
+      '<div class="mission"><span class="m-ico">'+Art.illu(m.icon)+'</span><div class="m-body">'
+      + '<b>'+esc(m.title)+'</b><p class="small muted">'+esc(m.desc)+'</p>'
+      + '<div class="row" style="gap:8px;margin-top:9px;flex-wrap:wrap"><span class="chip gold">'+Art.icon("coinI")+m.coins+'</span>'
+      + '<span class="chip">ab '+m.minAge+' Jahren</span>'
+      + '<button class="btn sm" data-a="claimMission" data-id="'+m.id+'">Übernehmen</button></div></div></div>').join("")
+      : empty("Gerade sind keine passenden Missionen frei.","sparkle");
+
+    const mine = Engine.missionsOf(kid);
+    const mineBox = mine.length? mine.map(m=> m.status==="claimed"
+      ? '<div class="mission claimed"><span class="m-ico">'+Art.illu(m.icon)+'</span><div class="m-body"><b>'+esc(m.title)+'</b>'
+        + '<p class="small muted">Noch offen — Haken setzt du in deinem Dashboard oder hier.</p>'
+        + '<div class="row" style="gap:8px;margin-top:9px"><button class="btn sm" data-a="completeMission" data-id="'+m.id+'">Erledigt — '+m.coins+' Coins</button>'
+        + '<button class="btn ghost sm" data-a="returnMission" data-id="'+m.id+'">Zurückgeben</button></div></div></div>'
+      : '<div class="mission" style="opacity:.72"><span class="m-ico">'+Art.illu(m.icon)+'</span><div class="m-body"><b>'+esc(m.title)+'</b><p class="small muted">Erledigt · +'+m.coins+' Coins</p></div></div>').join("")
+      : empty("Noch nichts übernommen.","box");
+
+    const rewards = db.rewards.filter(r=> age>=r.minAge).map(r=>{
+      const can = coins>=r.cost;
+      return '<div class="reward"><span class="r-ico">'+Art.illu(r.icon)+'</span><div style="flex:1;min-width:0">'
+        + '<b class="small">'+esc(r.title)+'</b><p class="xs muted">'+esc(r.desc)+'</p>'
+        + (!can? '<div style="margin-top:7px;max-width:160px">'+bar(coins/r.cost*100,"gold")+'<span class="xs muted">noch '+(r.cost-coins)+' Coins</span></div>':'')
+        + '</div><button class="btn '+(can?"gold":"ghost")+' sm" data-a="redeem" data-id="'+r.id+'" '+(can?"":"disabled")+'>'+r.cost+'</button></div>';
+    }).join("");
+
+    const red = db.state.redemptions.filter(r=>r.person===kid);
+    const redBox = red.length? red.map(r=>'<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line-2)"><div style="flex:1"><b class="small">'+esc(r.title)+'</b><div class="xs muted">'+r.date+' · '+r.cost+' Coins'+(r.used?" · benutzt":"")+'</div></div><button class="btn ghost sm" data-a="useRedemption" data-id="'+r.id+'">'+(r.used?"zurück":"benutzt")+'</button></div>').join("")
+      : '<p class="small muted">Noch nichts eingelöst.</p>';
+
+    const tg = db.teamGoal;
+    const team = '<div class="card"><div class="row" style="gap:14px"><span style="width:48px;flex:none">'+Art.illu(tg.icon)+'</span>'
+      + '<div style="flex:1"><b>'+esc(tg.title)+'</b><p class="xs muted">Gemeinsam für alle — kein Wettbewerb.</p></div></div>'
+      + '<div style="margin-top:12px">'+bar(tg.progress/tg.target*100)+'</div>'
+      + '<p class="xs muted" style="margin-top:6px">'+tg.progress+' von '+tg.target+' Punkten. Jede erledigte Extra-Mission zählt für die ganze Familie mit.</p></div>';
+
+    return '<div class="stack lg" style="padding-top:18px">'
+      + '<div><span class="eyebrow">Freiwillig, gegen Coins</span><h1 style="margin-top:4px">Jobbörse</h1>'
+      + '<p class="small muted" style="margin-top:6px">Übernehmen heißt noch nicht erledigt. Coins gibt es erst mit dem Haken.</p></div>'
+      + kidTabs
+      + '<div class="row" style="gap:10px"><span class="coin-badge">'+Art.illu("coin")+coins+' Coins</span>'+personPill(kid)+'</div>'
+      + '<div class="two-col"><div class="stack">'
+      + '<div><div class="section-h"><h2>Freie Missionen</h2></div><div class="stack" style="gap:12px">'+board+'</div>'
+      + (tooOld.length? '<p class="xs muted" style="margin-top:10px">'+tooOld.length+' weitere Missionen sind für ältere Geschwister gedacht.</p>':'')+'</div>'
+      + '<div><div class="section-h"><h2>Übernommen von '+esc(P(kid).name)+'</h2></div><div class="stack" style="gap:12px">'+mineBox+'</div></div>'
+      + '</div><div class="stack">'
+      + '<div><div class="section-h"><h2>Belohnungen</h2></div><div class="stack" style="gap:10px">'+rewards+'</div></div>'
+      + '<div><div class="section-h"><h2>Eingelöst</h2></div><div class="card">'+redBox+'</div></div>'
+      + '<div><div class="section-h"><h2>Familienziel</h2></div>'+team+'</div>'
+      + '</div></div></div>';
+  }
+
+  /* ==========================  HAUS  ========================== */
+  function viewHouse(){
+    const k=S.date, db=Store.get(), day=Store.dayRead(k), assign=Engine.assignmentsFor(k);
+    const rooms = ["alle"].concat([...new Set(db.chores.map(c=>c.room))]);
+    const tabs = '<div class="tabs">'+rooms.map(r=>'<button data-a="setHouseFilter" data-id="'+r+'" aria-pressed="'+(S.houseFilter===r||(S.houseFilter==="all"&&r==="alle"))+'">'+esc(r)+'</button>').join("")+'</div>';
+    const list = db.chores
+      .filter(c=> S.houseFilter==="all"||S.houseFilter==="alle" ? true : c.room===S.houseFilter)
+      .map(c=> ({c, st:Engine.choreStatus(c,k)}))
+      .sort((a,b)=> a.st.days-b.st.days)
+      .map(({c,st})=>{
+        const who = assign[c.id];
+        const dueTxt = st.days<0 ? (-st.days)+" Tage überfällig" : st.days===0 ? "heute fällig" : "in "+st.days+" Tagen";
+        return '<div class="chore-row">'
+          + '<span class="due-dot due-'+st.state+'"></span>'
+          + '<div style="flex:1;min-width:0"><b class="small">'+esc(c.title)+'</b>'
+          + '<div class="xs muted">'+esc(c.room)+' · alle '+c.interval+' Tage · zuletzt '+(c.lastDone||"—")+' · '+dueTxt+'</div>'
+          + (c.note? '<div class="xs muted" style="margin-top:2px">'+esc(c.note)+'</div>':'')+'</div>'
+          + (who? (who==="*"? '<span class="chip">Familie</span>' : '<span class="pill-person" style="background:'+P(who).soft+'">'+Art.avatar(who)+esc(P(who).name)+'</span>') : '')
+          + '<button class="btn '+(day.chores[c.id]?"soft":"ghost")+' sm" data-a="toggleChore" data-id="'+c.id+'">'+(day.chores[c.id]?"erledigt":"Heute erledigt")+'</button>'
+          + '</div>';
+      }).join("");
+
+    const load = db.people.map(p=>{
+      const n = db.state.choreHistory[p.id]||0;
+      const max = Math.max(1, ...db.people.map(x=>db.state.choreHistory[x.id]||0));
+      return '<div style="margin-bottom:12px"><div class="row"><b class="small">'+esc(p.name)+'</b><span class="spacer"></span><span class="xs muted">'+n+' Punkte</span></div>'
+        + '<div style="margin-top:5px">'+bar(n/max*100)+'</div></div>';
+    }).join("");
+
+    const sh = db.settings.shopping;
+    const shopCard = '<div class="card"><div class="row" style="gap:12px"><span style="width:42px;flex:none">'+Art.illu("box")+'</span>'
+      + '<div style="flex:1"><b class="small">Einkaufsslot</b><p class="xs muted">'+["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"][sh.day-1]+', '+sh.start+' — '+sh.minutes+' Minuten. Vorgeschlagen, weil an diesem Nachmittag keine Hobbys anstehen.</p></div></div></div>';
+
+    return '<div class="stack lg" style="padding-top:18px">'
+      + '<div><span class="eyebrow">Haushaltsgedächtnis</span><h1 style="margin-top:4px">Haus</h1>'
+      + '<p class="small muted" style="margin-top:6px">Jede Aufgabe merkt sich, wann sie zuletzt erledigt wurde, und rechnet die nächste Fälligkeit selbst aus.</p></div>'
+      + tabs
+      + '<div class="two-col"><div class="card">'+list+'</div>'
+      + '<div class="stack">'
+      + '<div><div class="section-h"><h2>Lastverteilung</h2><span class="hint">damit es nicht immer dieselbe Person trifft</span></div><div class="card">'+load+'</div></div>'
+      + shopCard
+      + '<div class="card"><div class="row" style="gap:12px"><span style="width:42px;flex:none">'+Art.illu("broom")+'</span>'
+      + '<div style="flex:1"><b class="small">Freitags-Reset</b><p class="xs muted">Donnerstagabend räumen alle 10 Minuten gemeinsam auf. Freitag wird dann geputzt statt entrümpelt.</p></div></div></div>'
+      + '</div></div></div>';
+  }
+
+  /* ==========================  ADMIN  ========================== */
+  const ICON_KEYS = ["lunchbox","folder","backpack","room","laundry","fold","sportbag","towel","toybox","tooth","shoes","plate","soap","drawer","sparkle","leaf","fridge","car","movie","tablet","tv","moon","friends","coin","map","heart","box","broom","star"];
+  const DAYS = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+  const peopleOpts = ()=> Store.get().people.map(p=>({v:p.id,l:p.name}));
+  const FIELDS = {
+    basics:[ {k:"title",l:"Titel",t:"text"}, {k:"short",l:"Kurzlabel (Emma-Modus)",t:"text"}, {k:"person",l:"Person",t:"select",o:peopleOpts},
+             {k:"icon",l:"Illustration",t:"select",o:()=>ICON_KEYS.map(i=>({v:i,l:i}))},
+             {k:"days",l:"Wochentage",t:"days"}, {k:"unlocksMedia",l:"Schaltet Medienzeit frei",t:"check"} ],
+    chores:[ {k:"title",l:"Titel",t:"text"}, {k:"room",l:"Bereich",t:"text"},
+             {k:"interval",l:"Intervall in Tagen",t:"number"}, {k:"effort",l:"Aufwand 1–3",t:"number"},
+             {k:"minAge",l:"Mindestalter",t:"number"}, {k:"pool",l:"Wer kommt infrage?",t:"multi",o:peopleOpts},
+             {k:"lastDone",l:"Zuletzt erledigt",t:"date"}, {k:"fixedDay",l:"Fester Wochentag (1=Mo, leer = flexibel)",t:"number"},
+             {k:"note",l:"Notiz",t:"text"} ],
+    missions:[ {k:"title",l:"Titel",t:"text"}, {k:"desc",l:"Beschreibung",t:"text"},
+               {k:"icon",l:"Illustration",t:"select",o:()=>ICON_KEYS.map(i=>({v:i,l:i}))},
+               {k:"coins",l:"Coin-Wert",t:"number"}, {k:"minAge",l:"Mindestalter",t:"number"} ],
+    rewards:[ {k:"title",l:"Titel",t:"text"}, {k:"desc",l:"Beschreibung",t:"text"},
+              {k:"icon",l:"Illustration",t:"select",o:()=>ICON_KEYS.map(i=>({v:i,l:i}))},
+              {k:"cost",l:"Kosten in Coins",t:"number"}, {k:"minAge",l:"Mindestalter",t:"number"} ],
+    people:[ {k:"name",l:"Name",t:"text"}, {k:"age",l:"Alter",t:"number"},
+             {k:"media",l:"Medienbudget in Minuten",t:"number"}, {k:"device",l:"Typisches Gerät",t:"text"} ],
+    events:[ {k:"title",l:"Titel",t:"text"}, {k:"person",l:"Person",t:"select",o:peopleOpts},
+             {k:"kind",l:"Art",t:"select",o:()=>["school","care","hobby","sport","work","family","logistics"].map(v=>({v,l:v}))},
+             {k:"days",l:"Wochentage",t:"days"},
+             {k:"week",l:"Woche",t:"select",o:()=>[{v:"*",l:"jede Woche"},{v:"A",l:"nur A"},{v:"B",l:"nur B"}]},
+             {k:"start",l:"Beginn",t:"time"}, {k:"end",l:"Ende",t:"time"},
+             {k:"travel.mode",l:"Anreise",t:"select",o:()=>[{v:"",l:"—"},{v:"car",l:"Auto"},{v:"bike",l:"Fahrrad"},{v:"scooter",l:"Roller"},{v:"walk",l:"zu Fuß"}]},
+             {k:"travel.min",l:"Fahrzeit in Minuten",t:"number"} ]
+  };
+  const getV=(o,k)=> k.split(".").reduce((a,p)=> a==null?undefined:a[p], o);
+  function setV(o,k,v){ const ps=k.split("."); let cur=o; ps.slice(0,-1).forEach(p=>{ if(typeof cur[p]!=="object"||!cur[p]) cur[p]={}; cur=cur[p]; }); cur[ps[ps.length-1]]=v; }
+
+  function fieldHTML(f, obj){
+    const v = getV(obj,f.k);
+    const n = 'data-f="'+f.k+'"';
+    if(f.t==="days"){
+      return '<label class="f">'+esc(f.l)+'</label><div class="row" style="gap:6px;flex-wrap:wrap" '+n+' data-type="days">'
+        + DAYS.map((d,i)=>'<button type="button" class="btn '+((v||[]).includes(i+1)?"soft":"ghost")+' sm" data-day="'+(i+1)+'">'+d+'</button>').join("")+'</div>';
+    }
+    if(f.t==="multi"){
+      const opts = f.o();
+      return '<label class="f">'+esc(f.l)+'</label><div class="row" style="gap:6px;flex-wrap:wrap" '+n+' data-type="multi">'
+        + opts.map(o=>'<button type="button" class="btn '+((v||[]).includes(o.v)?"soft":"ghost")+' sm" data-val="'+o.v+'">'+esc(o.l)+'</button>').join("")+'</div>';
+    }
+    if(f.t==="check") return '<label class="row" style="gap:10px"><input type="checkbox" '+n+' data-type="check" '+(v?"checked":"")+' style="width:22px;height:22px"><span class="small">'+esc(f.l)+'</span></label>';
+    if(f.t==="select") return '<label class="f">'+esc(f.l)+'</label><select class="f" '+n+' data-type="text">'+f.o().map(o=>'<option value="'+esc(o.v)+'" '+(String(v||"")===String(o.v)?"selected":"")+'>'+esc(o.l)+'</option>').join("")+'</select>';
+    const type = f.t==="number"?"number": f.t==="date"?"date": f.t==="time"?"time":"text";
+    return '<label class="f">'+esc(f.l)+'</label><input class="f" type="'+type+'" '+n+' data-type="'+(f.t==="number"?"number":"text")+'" value="'+esc(v==null?"":v)+'">';
+  }
+  function openEdit(coll, id){
+    const list = Store.get()[coll] || [];
+    const obj = id? JSON.parse(JSON.stringify(list.find(x=>x.id===id))) : { id:uid(coll), days:[1,2,3,4,5], status:"open", by:null, week:"*", pool:[] };
+    const body = '<div class="stack" style="gap:14px" id="editForm" data-coll="'+coll+'" data-id="'+esc(obj.id)+'">'
+      + FIELDS[coll].map(f=>'<div>'+fieldHTML(f,obj)+'</div>').join("") + '</div>';
+    const foot = '<button class="btn" data-a="saveEdit">Speichern</button>'
+      + (id && coll!=="people" ? '<button class="btn danger" data-a="deleteEdit">Löschen</button>':'')
+      + '<span class="spacer"></span><button class="btn ghost" data-a="closeModal">Abbrechen</button>';
+    modal(id? "Bearbeiten":"Neu anlegen", body, foot);
+  }
+  function readForm(){
+    const form = el("editForm"); const coll = form.dataset.coll;
+    const obj = { id: form.dataset.id };
+    FIELDS[coll].forEach(f=>{
+      const node = form.querySelector('[data-f="'+f.k+'"]');
+      if(!node) return;
+      const type = node.dataset.type;
+      let val;
+      if(type==="days") val = [...node.querySelectorAll("button")].filter(b=>b.classList.contains("soft")).map(b=>+b.dataset.day);
+      else if(type==="multi") val = [...node.querySelectorAll("button")].filter(b=>b.classList.contains("soft")).map(b=>b.dataset.val);
+      else if(type==="check") val = node.checked;
+      else if(type==="number") val = node.value===""? null : Number(node.value);
+      else val = node.value;
+      if(f.k==="travel.mode" && !val){ obj.travel = null; return; }
+      setV(obj, f.k, val);
+    });
+    if(obj.travel && !obj.travel.min) obj.travel.min = 10;
+    return { coll, obj };
+  }
+
+  function admList(coll, render){
+    const list = Store.get()[coll]||[];
+    return '<div class="card">'+ (list.length? list.map(x=>
+      '<div class="adm-item"><div class="ai-body">'+render(x)+'</div>'
+      + '<button class="icon-btn" data-a="edit" data-coll="'+coll+'" data-id="'+x.id+'" aria-label="Bearbeiten">'+Art.icon("edit")+'</button>'
+      + (coll!=="people"? '<button class="icon-btn" data-a="del" data-coll="'+coll+'" data-id="'+x.id+'" aria-label="Löschen">'+Art.icon("trash")+'</button>':'')
+      +'</div>').join("") : '<p class="small muted">Noch nichts angelegt.</p>')
+      + (coll!=="people"? '<button class="btn soft block" style="margin-top:14px" data-a="edit" data-coll="'+coll+'">'+Art.icon("plus")+' Neu anlegen</button>':'')
+      + '</div>';
+  }
+  const SYNC_LABEL = { off:["Aus","chip"], ok:["Verbunden","chip ok"], busy:["Gleicht ab …","chip"], error:["Fehler","chip warn"] };
+  function syncCard(){
+    const st = Sync.state(), cfg = Sync.config()||{};
+    const lab = SYNC_LABEL[st.status] || SYNC_LABEL.off;
+    return '<div style="border-top:1px solid var(--line-2);padding-top:14px">'
+      + '<div class="row" style="gap:10px"><b class="small" style="flex:1">Familien-Synchronisation</b><span class="'+lab[1]+'">'+lab[0]+'</span></div>'
+      + (st.configured
+          ? '<p class="xs muted" style="margin-top:6px">Familie <b>'+esc(cfg.family||"")+'</b> · dieses Gerät meldet sich als <b>'+esc(cfg.name||"Gerät")+'</b>'
+            + (st.pending? ' · '+st.pending+' Änderung(en) warten auf Upload':' · alles übertragen')
+            + (st.detail? '<br>Letzte Meldung: '+esc(st.detail):'')+'</p>'
+            + '<div class="row" style="gap:10px;margin-top:12px;flex-wrap:wrap">'
+            + '<button class="btn ghost sm" data-a="syncNow">'+Art.icon("refresh")+' Jetzt abgleichen</button>'
+            + '<button class="btn ghost sm" data-a="syncOpen">Zugang ändern</button>'
+            + '<button class="btn ghost sm" data-a="syncSnapshot">Diesen Stand als Familienstand setzen</button>'
+            + '<button class="btn danger sm" data-a="syncOff">Trennen</button></div>'
+          : '<p class="xs muted" style="margin-top:6px">Ohne Verbindung bleibt jede Eintragung nur auf diesem Gerät. Mit Verbindung sehen alle Geräte dieselben Daten — auch offline, es wird nachgetragen, sobald wieder Netz da ist.</p>'
+            + '<button class="btn soft sm" style="margin-top:12px" data-a="syncOpen">Verbindung einrichten</button>')
+      + '</div>';
+  }
+  function syncModal(){
+    const c = Sync.config() || {};
+    modal("Familien-Synchronisation",
+      '<p class="small muted" style="margin-bottom:14px">Die drei Angaben stehen im Supabase-Projekt unter <b>Project Settings → API</b>. Der Familienname ist frei wählbar, muss aber auf allen Geräten identisch sein.</p>'
+      + '<div class="stack" style="gap:12px">'
+      + '<div><label class="f">Projekt-URL</label><input class="f" id="syUrl" placeholder="https://abcdefgh.supabase.co" value="'+esc(c.url||"")+'"></div>'
+      + '<div><label class="f">anon public key</label><input class="f" id="syKey" placeholder="eyJhbGciOi…" value="'+esc(c.key||"")+'"></div>'
+      + '<div><label class="f">Familienname (geheim halten)</label><input class="f" id="syFam" placeholder="z. B. nestwerk-8f3a91c2" value="'+esc(c.family||"")+'"></div>'
+      + '<div><label class="f">Name dieses Geräts</label><input class="f" id="syName" placeholder="Küchen-Tablet" value="'+esc(c.name||"")+'"></div>'
+      + '</div>',
+      '<button class="btn" data-a="syncSave">Verbinden</button><span class="spacer"></span><button class="btn ghost" data-a="closeModal">Abbrechen</button>');
+  }
+  function viewAdmin(){
+    const db=Store.get(), st=db.settings;
+    const tabs = [["basics","Daily Basics"],["chores","Haushalt"],["missions","Missionen"],["rewards","Belohnungen"],["people","Personen"],["events","Termine & Regeln"],["rules","Einstellungen"],["data","Daten"]];
+    const tabBar = '<div class="tabs">'+tabs.map(t=>'<button data-a="setAdminTab" data-id="'+t[0]+'" aria-pressed="'+(S.adminTab===t[0])+'">'+t[1]+'</button>').join("")+'</div>';
+    let body="";
+    if(S.adminTab==="basics") body = admList("basics", b=>'<b class="small">'+esc(b.title)+'</b><div class="xs muted">'+esc(P(b.person).name)+' · '+(b.days||[]).map(d=>DAYS[d-1]).join(" ")+(b.unlocksMedia?" · schaltet Medien frei":"")+'</div>');
+    if(S.adminTab==="chores") body = admList("chores", c=>'<b class="small">'+esc(c.title)+'</b><div class="xs muted">'+esc(c.room)+' · alle '+c.interval+' Tage · ab '+c.minAge+' J. · zuletzt '+(c.lastDone||"—")+'</div>');
+    if(S.adminTab==="missions") body = admList("missions", m=>'<b class="small">'+esc(m.title)+'</b><div class="xs muted">'+m.coins+' Coins · ab '+m.minAge+' J. · '+m.status+(m.by?" ("+P(m.by).name+")":"")+'</div>');
+    if(S.adminTab==="rewards") body = admList("rewards", r=>'<b class="small">'+esc(r.title)+'</b><div class="xs muted">'+r.cost+' Coins · ab '+r.minAge+' J.</div>');
+    if(S.adminTab==="events") body = admList("events", e=>'<b class="small">'+esc(e.title)+'</b><div class="xs muted">'+esc(P(e.person).name)+' · '+(e.days||[]).map(d=>DAYS[d-1]).join(" ")+' · '+e.start+'–'+e.end+(e.week&&e.week!=="*"?" · Woche "+e.week:"")+(e.travel?" · "+Engine.travelLabel(e.travel)+" "+e.travel.min+" Min":"")+'</div>');
+    if(S.adminTab==="people"){
+      body = admList("people", p=>'<div class="row" style="gap:10px"><span style="width:32px;flex:none">'+Art.avatar(p.id)+'</span><div><b class="small">'+esc(p.name)+'</b><div class="xs muted">'+p.age+' Jahre · '+(p.role==="child"? p.media+" Min Medien · Companion "+Art.companionName(p.companion) : "Erwachsen · keine Coins")+'</div></div></div>')
+        + '<div class="card" style="margin-top:14px"><span class="eyebrow">Coin-Konten</span>'
+        + db.people.filter(p=>p.role==="child").map(p=>'<div class="row" style="gap:10px;padding:10px 0"><span style="flex:1" class="small">'+esc(p.name)+'</span>'
+          + '<input class="f" style="width:110px" type="number" value="'+(db.state.coins[p.id]||0)+'" data-a="setCoins" data-id="'+p.id+'"></div>').join("")+'</div>';
+    }
+    if(S.adminTab==="rules"){
+      body = '<div class="card stack" style="gap:16px">'
+        + '<label class="row" style="gap:10px"><input type="checkbox" data-a="setKey" '+(st.hannahHasKey?"checked":"")+' style="width:22px;height:22px"><span class="small">Hannah hat einen eigenen Haustürschlüssel</span></label>'
+        + '<div class="form-row">'
+        + '<div><label class="f">Betreuung frühestens</label><input class="f" type="time" data-a="setS" data-k="hannahCareEarliest" value="'+st.hannahCareEarliest+'"></div>'
+        + '<div><label class="f">Betreuung spätestens</label><input class="f" type="time" data-a="setS" data-k="hannahCareLatest" value="'+st.hannahCareLatest+'"></div>'
+        + '<div><label class="f">Emma abholen (Ziel)</label><input class="f" type="time" data-a="setS" data-k="emmaPickupTarget" value="'+st.emmaPickupTarget+'"></div>'
+        + '<div><label class="f">Emma abholen (spätestens)</label><input class="f" type="time" data-a="setS" data-k="emmaPickupLatest" value="'+st.emmaPickupLatest+'"></div>'
+        + '<div><label class="f">Emma ins Bett ab</label><input class="f" type="time" data-a="setS" data-k="emmaBedStart" value="'+st.emmaBedStart+'"></div>'
+        + '<div><label class="f">Küchenabschluss ab</label><input class="f" type="time" data-a="setS" data-k="kitchenStart" value="'+st.kitchenStart+'"></div>'
+        + '<div><label class="f">Einkaufstag (1 = Montag)</label><input class="f" type="number" min="1" max="7" data-a="setShop" data-k="day" value="'+st.shopping.day+'"></div>'
+        + '<div><label class="f">Einkauf ab</label><input class="f" type="time" data-a="setShop" data-k="start" value="'+st.shopping.start+'"></div>'
+        + '<div><label class="f">A/B-Woche: Ankermontag</label><input class="f" type="date" data-a="setMeta" data-k="abAnchor" value="'+db.meta.abAnchor+'"></div>'
+        + '<div><label class="f">Ankerwoche ist</label><select class="f" data-a="setMeta" data-k="abAnchorWeek"><option '+(db.meta.abAnchorWeek==="A"?"selected":"")+'>A</option><option '+(db.meta.abAnchorWeek==="B"?"selected":"")+'>B</option></select></div>'
+        + '</div>'
+        + '<p class="xs muted">Aktuelle Woche laut Einstellung: <b>Woche '+Engine.weekType(S.date)+'</b>. Arbeitszeiten der Eltern stehen im Datenmodell unter <code>work</code> und lassen sich über Export/Import anpassen.</p>'
+        + '</div>';
+    }
+    if(S.adminTab==="data"){
+      body = '<div class="card stack" style="gap:14px">'
+        + '<div><b class="small">Sicherung</b><p class="xs muted">Alle Familiendaten als JSON — zum Aufheben oder zum Umzug auf ein anderes Gerät.</p></div>'
+        + '<div class="row" style="gap:10px;flex-wrap:wrap">'
+        + '<button class="btn" data-a="export">'+Art.icon("download")+' Exportieren</button>'
+        + '<button class="btn ghost" data-a="importOpen">'+Art.icon("upload")+' Importieren</button>'
+        + '<button class="btn danger" data-a="resetAll">'+Art.icon("refresh")+' Alles zurücksetzen</button></div>'
+        + syncCard()
+        + '<div style="border-top:1px solid var(--line-2);padding-top:14px"><b class="small">Vorbereitet für später</b>'
+        + '<p class="xs muted" style="margin-top:6px">Kalenderdaten sind vom App-Zustand getrennt modelliert: <code>events</code> beschreibt wiederkehrende Regeln, <code>state.log</code> nur Erledigungen. Ein Google-Calendar-Import kann später zusätzliche Einträge in eine Sammlung <code>externalEvents</code> schreiben, ohne die Regeln zu berühren. Ebenso ist <code>settings</code> der Ort für spätere Smart-Home-Auslöser, etwa den Saugroboter an Homeoffice-Tagen.</p></div>'
+        + '<div style="border-top:1px solid var(--line-2);padding-top:14px"><b class="small">Speicherstand</b>'
+        + '<p class="xs muted" style="margin-top:6px">'+Object.keys(db.state.log).length+' Tage protokolliert · '+db.chores.length+' Haushaltsaufgaben · '+db.basics.length+' Basics · '+db.missions.length+' Missionen · '+db.state.redemptions.length+' Einlösungen</p></div>'
+        + '</div>';
+    }
+    return '<div class="stack lg" style="padding-top:18px">'
+      + '<div><span class="eyebrow">Ohne Quellcode ändern</span><h1 style="margin-top:4px">Admin</h1></div>'
+      + tabBar + body + '</div>';
+  }
+
+  /* ==========================  RENDER + EVENTS  ========================== */
+  const TABS = [["today","Heute","today"],["me","Ich","me"],["jobs","Jobs","jobs"],["house","Haus","house"],["admin","Admin","admin"]];
+  function renderNav(){
+    el("nav").innerHTML = TABS.map(t=>'<button data-a="tab" data-id="'+t[0]+'" '+(S.tab===t[0]?'aria-current="page"':'')+'>'+Art.icon(t[2])+'<span>'+t[1]+'</span></button>').join("");
+  }
+  function render(){
+    const y = window.scrollY;
+    el("mark").innerHTML = Art.mark();
+    el("dateB").textContent = T.dayShort(S.date)+", "+T.long(S.date);
+    el("dateS").textContent = "Woche "+Engine.weekType(S.date);
+    const sy = Sync.state(), dot = el("syncDot");
+    if(dot){
+      dot.style.display = sy.configured ? "inline-flex" : "none";
+      dot.className = "sync-dot s-"+sy.status;
+      dot.title = sy.status==="ok" ? "Synchronisiert" : sy.status==="error" ? ("Sync-Problem: "+sy.detail) : "Gleicht ab …";
+    }
+    renderNav();
+    const v = el("view");
+    try{
+      v.innerHTML = S.tab==="today"? viewToday() : S.tab==="me"? viewMe() : S.tab==="jobs"? viewJobs() : S.tab==="house"? viewHouse() : viewAdmin();
+    }catch(err){
+      console.error(err);
+      v.innerHTML = '<div class="card" style="margin-top:24px"><h2>Diese Ansicht lässt sich gerade nicht aufbauen</h2>'
+        + '<p class="small muted" style="margin-top:8px">'+esc(err.message)+'</p>'
+        + '<button class="btn ghost" style="margin-top:14px" data-a="tab" data-id="today">Zurück zu Heute</button></div>';
+    }
+    window.scrollTo(0,y);
+  }
+
+  function pop(id){ const n = document.querySelector('[data-id="'+id+'"]'); if(n) { n.classList.add("pop"); setTimeout(()=>n.classList.remove("pop"),420); } }
+
+  function handle(e){
+    const node = e.target.closest("[data-a]");
+    if(!node) return;
+    if(node.classList.contains("modal-bg") && e.target!==node) return;
+    const a = node.dataset.a, id = node.dataset.id, k = S.date;
+    switch(a){
+      case "tab": S.tab=id; render(); window.scrollTo(0,0); break;
+      case "setPerson": S.person=id; render(); break;
+      case "openPerson": S.person=id; S.tab="me"; render(); window.scrollTo(0,0); break;
+      case "setJobKid": S.jobKid=id; render(); break;
+      case "setHouseFilter": S.houseFilter = id==="alle"?"all":id; render(); break;
+      case "setAdminTab": S.adminTab=id; render(); break;
+      case "dateShift": S.date = T.addDays(S.date, +node.dataset.n); Actions.ensureDay(S.date); render(); break;
+      case "dateToday": S.date = T.key(new Date()); render(); break;
+      case "toggleBasic": Actions.toggleBasic(id,k); pop(id); break;
+      case "toggleChore": Actions.toggleChore(id,k,e); pop(id); break;
+      case "claimMission": Actions.claimMission(id, S.tab==="jobs"? S.jobKid : S.person); break;
+      case "returnMission": e.stopPropagation(); Actions.returnMission(id); break;
+      case "completeMission": Actions.completeMission(id,k,e); break;
+      case "redeem": Actions.redeem(id, S.jobKid, e); break;
+      case "useRedemption": Actions.markRedemptionUsed(id); break;
+      case "logMedia": Actions.logMedia(id, +node.dataset.n, k); break;
+      case "undoMedia": Actions.undoMedia(id, +node.dataset.n, k); break;
+      case "swapEvening": Actions.swapEvening(k); break;
+      case "edit": openEdit(node.dataset.coll, id); break;
+      case "del": if(confirm("Wirklich löschen?")) Actions.remove(node.dataset.coll, id); break;
+      case "saveEdit": {
+        const {coll,obj} = readForm();
+        if(!obj.title || !String(obj.title).trim()){ toast("Bitte einen Titel eintragen."); break; }
+        if(coll==="events" && (!obj.start || !obj.end)){ toast("Termine brauchen Beginn und Ende."); break; }
+        if(coll==="events" && T.min(obj.end) <= T.min(obj.start)){ toast("Das Ende muss nach dem Beginn liegen."); break; }
+        if(coll==="chores" && (!obj.interval || obj.interval<1)){ toast("Das Intervall muss mindestens 1 Tag sein."); break; }
+        if(coll==="chores" && (!obj.pool || !obj.pool.length)){ toast("Bitte mindestens eine Person auswählen."); break; }
+        if(coll==="basics" && (!obj.days || !obj.days.length)){ toast("Bitte mindestens einen Wochentag wählen."); break; }
+        if(coll==="chores" && !obj.room) obj.room = "Haus";
+        if(coll==="chores" && !obj.lastDone) obj.lastDone = T.addDays(S.date, -(obj.interval||1));
+        if(coll==="chores" && !obj.effort) obj.effort = 1;
+        if((coll==="missions"||coll==="rewards") && !obj.icon) obj.icon = "sparkle";
+        Actions.upsert(coll,obj); closeModal(); toast("Gespeichert."); break; }
+      case "deleteEdit": { const form=el("editForm"); Actions.remove(form.dataset.coll, form.dataset.id); closeModal(); break; }
+      case "closeModal": closeModal(); break;
+      case "export": doExport(); break;
+      case "importOpen": doImportOpen(); break;
+      case "resetAll": if(confirm("Alle Daten löschen und neu starten?")){ Store.reset(); toast("Zurückgesetzt."); } break;
+      case "syncOpen": syncModal(); break;
+      case "syncOff": if(confirm("Verbindung trennen? Die Daten bleiben auf diesem Gerät, werden aber nicht mehr abgeglichen.")){ Sync.disconnect(); render(); } break;
+      case "syncNow": Sync.cycle().then(()=>toast("Abgeglichen.")); break;
+      case "syncSnapshot":
+        if(confirm("Der Stand dieses Geräts wird zum gültigen Familienstand. Andere Geräte übernehmen ihn beim nächsten Abgleich. Fortfahren?"))
+          Sync.publishSnapshot().then(()=>{ toast("Familienstand gesetzt."); render(); })
+                                .catch(err=> toast("Fehlgeschlagen: "+err.message));
+        break;
+      case "syncSave": {
+        const next = { url:el("syUrl").value.trim(), key:el("syKey").value.trim(),
+                       family:el("syFam").value.trim(), name:el("syName").value.trim()||"Gerät" };
+        if(!next.url || !next.key || !next.family){ toast("Bitte URL, Key und Familienname ausfüllen."); break; }
+        toast("Verbinde …");
+        Sync.connect(next, ()=> Promise.resolve(confirm(
+            "Auf dem Server liegt bereits ein Familienstand.\n\nOK = diesen übernehmen (lokale Daten dieses Geräts werden ersetzt).\nAbbrechen = die lokalen Daten dieses Geräts zum Familienstand machen.")))
+          .then(()=>{ closeModal(); toast("Verbunden."); render(); })
+          .catch(err=> toast("Verbindung fehlgeschlagen: "+err.message));
+        break; }
+    }
+    /* Mehrfachauswahl-Buttons im Formular */
+    if(node.dataset.day!=null || node.dataset.val!=null){ node.classList.toggle("soft"); node.classList.toggle("ghost"); }
+  }
+  function handleChange(e){
+    const node = e.target.closest("[data-a]"); if(!node) return;
+    const a = node.dataset.a;
+    if(a==="setS") Actions.patchSettings({[node.dataset.k]: node.value});
+    else if(a==="setShop"){ const s=Object.assign({},Store.get().settings.shopping); s[node.dataset.k]= node.dataset.k==="day"? +node.value : node.value; Actions.patchSettings({shopping:s}); }
+    else if(a==="setKey") Actions.patchSettings({hannahHasKey:node.checked});
+    else if(a==="setMeta") Actions.patchMeta({[node.dataset.k]: node.value});
+    else if(a==="setCoins") Actions.setCoins(node.dataset.id, +node.value);
+  }
+  function doExport(){
+    const blob = new Blob([Store.exportJSON()], {type:"application/json"});
+    const u = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href=u; a.download="nestwerk-sicherung-"+T.key(new Date())+".json"; a.click();
+    setTimeout(()=>URL.revokeObjectURL(u),1500); toast("Sicherung heruntergeladen.");
+  }
+  function doImportOpen(){
+    modal("Sicherung einspielen",
+      '<p class="small muted" style="margin-bottom:12px">Datei auswählen oder JSON einfügen. Die aktuellen Daten werden ersetzt.</p>'
+      + '<input type="file" accept="application/json" id="impFile" class="f" style="padding:9px">'
+      + '<textarea class="f" id="impText" rows="7" style="margin-top:12px" placeholder="{ ... }"></textarea>',
+      '<button class="btn" id="impGo">Einspielen</button><span class="spacer"></span><button class="btn ghost" data-a="closeModal">Abbrechen</button>');
+    el("impFile").addEventListener("change", ev=>{
+      const f = ev.target.files[0]; if(!f) return;
+      const r = new FileReader(); r.onload = ()=>{ el("impText").value = r.result; }; r.readAsText(f);
+    });
+    el("impGo").addEventListener("click", ()=>{
+      try{ Store.importJSON(el("impText").value); closeModal(); toast("Daten eingespielt."); }
+      catch(err){ toast("Datei nicht lesbar: "+err.message); }
+    });
+  }
+
+  function init(){
+    Store.load();
+    Store.subscribe(render);
+    Sync.init();
+    Actions.ensureDay(S.date);
+    document.addEventListener("click", handle);
+    document.addEventListener("change", handleChange);
+    document.addEventListener("keydown", e=>{
+      if((e.key==="Enter"||e.key===" ") && e.target.matches('[role="button"][data-a]')){ e.preventDefault(); e.target.click(); }
+      if(e.key==="Escape") closeModal();
+    });
+    /* Tageswechsel um Mitternacht abfangen */
+    /* Nur die Jetzt-Linie im Tagesband aktualisieren — nie beim Tippen neu rendern */
+    setInterval(()=>{
+      if(S.tab!=="today") return;
+      if(el("modalRoot").innerHTML) return;
+      if(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+      render();
+    }, 60000);
+    render();
+  }
+
+  return { init, render, toast, coinFly, celebrate, modal, closeModal, S };
+})();
+
+document.addEventListener("DOMContentLoaded", UI.init);
+</script>
+</body>
+</html>
