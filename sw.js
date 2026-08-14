@@ -4,7 +4,7 @@
    - Seitenaufrufe: erst Netz, bei Ausfall der letzte bekannte Stand.
    - Fremde Adressen (Supabase, Open-Meteo): niemals zwischenspeichern.
    Die Versionsnummer bei jeder neuen Fassung hochzählen.                    */
-const VERSION = "nestwerk-v1";
+const VERSION = "nestwerk-v3";
 const SHELL = [
   "./",
   "./index.html",
